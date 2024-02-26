@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tfg.inventariado.dto.ArticuloDto;
 import com.tfg.inventariado.dto.InventarioDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.OficinaDto;
 import com.tfg.inventariado.dto.SalidaDto;
 import com.tfg.inventariado.entity.SalidaEntity;
 import com.tfg.inventariado.provider.ArticuloProvider;
@@ -90,7 +92,10 @@ public class SalidaProviderImpl implements SalidaProvider {
 			return MessageResponseDto.fail("La fecha no puede ser posterior a la actual");
 		}
 		
-		InventarioDto inventarioDto = new InventarioDto(salida.getCodArticulo(), salida.getIdOficina(), inventario.getMessage().getStock()-salida.getNumUnidades() );
+		OficinaDto of = oficinaProvider.getOficinaById(salida.getIdOficina()).getMessage();
+		ArticuloDto art = articuloProvider.getArticuloById(salida.getCodArticulo()).getMessage();
+		
+		InventarioDto inventarioDto = new InventarioDto(salida.getCodArticulo(), salida.getIdOficina(), inventario.getMessage().getStock()-salida.getNumUnidades(),art,of );
 		MessageResponseDto<String>  msgInventario = inventarioProvider.editInventario(inventarioDto,salida.getIdOficina(),salida.getCodArticulo());
 		if(!msgInventario.isSuccess()) {
 			return MessageResponseDto.fail(msgInventario.getError());
@@ -124,7 +129,10 @@ public class SalidaProviderImpl implements SalidaProvider {
 				return MessageResponseDto.fail("La fecha no puede ser posterior a la actual");
 			}
 			
-			InventarioDto inventarioDto = new InventarioDto(salida.getCodArticulo(), salida.getIdOficina(), inventario.getMessage().getStock()+ optionalSalida.get().getNumUnidades()-salida.getNumUnidades() );
+			OficinaDto of = oficinaProvider.getOficinaById(salida.getIdOficina()).getMessage();
+			ArticuloDto art = articuloProvider.getArticuloById(salida.getCodArticulo()).getMessage();
+			
+			InventarioDto inventarioDto = new InventarioDto(salida.getCodArticulo(), salida.getIdOficina(), inventario.getMessage().getStock()+ optionalSalida.get().getNumUnidades()-salida.getNumUnidades(),art,of );
 			MessageResponseDto<String>  msgInventario = inventarioProvider.editInventario(inventarioDto,salida.getIdOficina(),salida.getCodArticulo());
 			if(!msgInventario.isSuccess()) {
 				return MessageResponseDto.fail(msgInventario.getError());

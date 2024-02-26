@@ -14,4 +14,7 @@ public class InventarioDto {
 	private Integer codArticulo;
 	private Integer idOficina;
 	private Integer stock;
+	
+	private ArticuloDto articulo;
+	private OficinaDto oficina;
 }

@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -155,7 +156,7 @@ public class InventarioProviderImpl implements InventarioProvider{
 
 	@Override
 	public MessageResponseListDto<List<InventarioDto>> listAllInventariosSkipLimit(Integer page, Integer size) {
-		PageRequest pageable = PageRequest.of(page, size);
+		PageRequest pageable = PageRequest.of(page, size, Sort.by("idOficina", "codArticulo"));
 		Page<InventarioEntity> pageableInventario = inventarioRepository.findAll(pageable);
 		
 		List<InventarioEntity> listaEntity = pageableInventario.getContent();
