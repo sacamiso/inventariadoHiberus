@@ -2,6 +2,8 @@ package com.tfg.inventariado.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +15,7 @@ public interface HistorialInventarioRepository extends JpaRepository<HistorialIn
 
 	List<HistorialInventarioEntity> findByIdOficina(int idOficina);
 	List<HistorialInventarioEntity> findByCodArticulo(int codArt);
+	
+	Page<HistorialInventarioEntity> findAll(Pageable pageable);
+	long count();
 }

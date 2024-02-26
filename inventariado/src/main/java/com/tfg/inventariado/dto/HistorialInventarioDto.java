@@ -17,4 +17,7 @@ public class HistorialInventarioDto {
 	private Integer idOficina;
     private LocalDateTime fecha;
 	private Integer stock;
+	
+	private ArticuloDto articulo;
+	private OficinaDto oficina;
 }

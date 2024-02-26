@@ -13,10 +13,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tfg.inventariado.dto.ArticuloDto;
 import com.tfg.inventariado.dto.HistorialInventarioDto;
 import com.tfg.inventariado.dto.InventarioDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
+import com.tfg.inventariado.dto.OficinaDto;
 import com.tfg.inventariado.entity.InventarioEntity;
 import com.tfg.inventariado.entity.InventarioEntityID;
 import com.tfg.inventariado.provider.ArticuloProvider;
@@ -75,7 +77,10 @@ public class InventarioProviderImpl implements InventarioProvider{
 			return MessageResponseDto.fail("El inventario ya existe, debe editarlo");
 		}
 		
-		HistorialInventarioDto historial = new HistorialInventarioDto(inventario.getCodArticulo(), inventario.getIdOficina(), LocalDateTime.now() , inventario.getStock());
+		OficinaDto of = oficinaProvider.getOficinaById(inventario.getIdOficina()).getMessage();
+		ArticuloDto art = articuloProvider.getArticuloById(inventario.getCodArticulo()).getMessage();
+		
+		HistorialInventarioDto historial = new HistorialInventarioDto(inventario.getCodArticulo(), inventario.getIdOficina(), LocalDateTime.now() , inventario.getStock(),art,of);
 		MessageResponseDto<String>  mesgHistorial = historialProvider.addHistorial(historial);
 		if(!mesgHistorial.isSuccess()) {
 			return MessageResponseDto.fail(mesgHistorial.getError());
@@ -91,7 +96,11 @@ public class InventarioProviderImpl implements InventarioProvider{
 		InventarioEntityID id = new InventarioEntityID(idArt, idOf);
 		Optional<InventarioEntity> optionalInventario = inventarioRepository.findById(id);
 		if(optionalInventario.isPresent()) {
-			HistorialInventarioDto historial = new HistorialInventarioDto(idArt, idOf, LocalDateTime.now() , inventario.getStock());
+			
+			OficinaDto of = oficinaProvider.getOficinaById(idOf).getMessage();
+			ArticuloDto art = articuloProvider.getArticuloById(idArt).getMessage();
+			
+			HistorialInventarioDto historial = new HistorialInventarioDto(idArt, idOf, LocalDateTime.now() , inventario.getStock(),art,of);
 			MessageResponseDto<String>  mesgHistorial = historialProvider.addHistorial(historial);
 			if(!mesgHistorial.isSuccess()) {
 				return MessageResponseDto.fail(mesgHistorial.getError());

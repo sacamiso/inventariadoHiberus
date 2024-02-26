@@ -44,7 +44,7 @@ public class InventarioController {
 	}
 	
 	@GetMapping("/listAllPag")
-	public ResponseEntity<MessageResponseListDto<List<InventarioDto>>> listarInventario(@RequestParam(value = "limit", required = false) Integer limit,
+	public ResponseEntity<MessageResponseListDto<List<InventarioDto>>> listarInventarioPag(@RequestParam(value = "limit", required = false) Integer limit,
 		    @RequestParam(value = "skip", required = false) Integer skip) {
 		MessageResponseListDto<List<InventarioDto>> listaDto = this.inventarioProvider.listAllInventariosSkipLimit(skip,limit);
 		return new ResponseEntity<MessageResponseListDto<List<InventarioDto>>>(listaDto, HttpStatus.OK);

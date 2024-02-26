@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.tfg.inventariado.dto.HistorialInventarioDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.HistorialInventarioEntity;
 
 public interface HistorialInventarioProvider {
@@ -20,4 +21,6 @@ public interface HistorialInventarioProvider {
 	MessageResponseDto<List<HistorialInventarioDto>> listHistorialByArticulo(Integer idArticulo);
 	
 	boolean inventarioExisteByID(Integer idOf, Integer idArt, LocalDateTime fecha);
+	
+	MessageResponseListDto<List<HistorialInventarioDto>> listAllHistorialSkipLimit(Integer page, Integer size);
 }

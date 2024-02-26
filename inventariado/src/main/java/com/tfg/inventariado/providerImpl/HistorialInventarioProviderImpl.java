@@ -7,11 +7,15 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tfg.inventariado.dto.HistorialInventarioDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.HistorialInventarioEntity;
 import com.tfg.inventariado.entity.HistorialInventarioEntityID;
 import com.tfg.inventariado.provider.ArticuloProvider;
@@ -145,6 +149,17 @@ public class HistorialInventarioProviderImpl implements HistorialInventarioProvi
 		HistorialInventarioEntityID id = new HistorialInventarioEntityID(idArt, idOf, fecha);
 		Optional<HistorialInventarioEntity> optionalHistorial = historialRepository.findById(id);
 		return optionalHistorial.isPresent() ? true : false;	
+	}
+
+	@Override
+	public MessageResponseListDto<List<HistorialInventarioDto>> listAllHistorialSkipLimit(Integer page, Integer size) {
+		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fecha"));
+		Page<HistorialInventarioEntity> pageableHistorial = historialRepository.findAll(pageable);
+		
+		List<HistorialInventarioEntity> listaEntity = pageableHistorial.getContent();
+		List<HistorialInventarioDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) historialRepository.count());
 	}
 
 }

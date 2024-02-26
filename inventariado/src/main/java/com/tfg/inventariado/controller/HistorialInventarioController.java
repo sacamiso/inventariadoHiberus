@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tfg.inventariado.dto.HistorialInventarioDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.provider.HistorialInventarioProvider;
 
 @RestController
@@ -46,6 +48,13 @@ public class HistorialInventarioController {
 	public ResponseEntity<List<HistorialInventarioDto>> listarHistorial() {
 		List<HistorialInventarioDto> listaDto = this.historialProvider.listAllHistoriales();
 		return new ResponseEntity<List<HistorialInventarioDto>>(listaDto, HttpStatus.OK);
+	}
+	
+	@GetMapping("/listAllPag")
+	public ResponseEntity<MessageResponseListDto<List<HistorialInventarioDto>>> listarHitorialPag(@RequestParam(value = "limit", required = false) Integer limit,
+		    @RequestParam(value = "skip", required = false) Integer skip) {
+		MessageResponseListDto<List<HistorialInventarioDto>> listaDto = this.historialProvider.listAllHistorialSkipLimit(skip,limit);
+		return new ResponseEntity<MessageResponseListDto<List<HistorialInventarioDto>>>(listaDto, HttpStatus.OK);
 	}
 	
 	@PutMapping("/editar/{idOf}/{idArt}/{fecha}")
