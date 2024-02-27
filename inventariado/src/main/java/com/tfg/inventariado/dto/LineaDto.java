@@ -1,5 +1,7 @@
 package com.tfg.inventariado.dto;
 
+import com.tfg.inventariado.entity.ArticuloEntity;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,4 +19,6 @@ public class LineaDto {
 	private Integer numeroUnidades;
 	private double precioLinea;
 	private double descuento;
+	
+	private ArticuloEntity articulo;
 }
