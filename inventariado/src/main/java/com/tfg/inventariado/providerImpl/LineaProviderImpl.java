@@ -29,8 +29,8 @@ public class LineaProviderImpl implements LineaProvider {
 	@Autowired
 	private ArticuloProvider articuloProvider;
 	
-	@Autowired
-	private PedidoProvider pedidoProvider;
+//	@Autowired
+//	private PedidoProvider pedidoProvider;
 	
 	@Override
 	public LineaDto convertToMapDto(LineaEntity linea) {
@@ -60,9 +60,9 @@ public class LineaProviderImpl implements LineaProvider {
 		if(lineaRepository.findById(id).isPresent()) {
 			return MessageResponseDto.fail("La línea ya existe para este pedido");
 		}
-		if(!this.pedidoProvider.pedidoExisteByID(linea.getNumeroPedido())) {
-			return MessageResponseDto.fail("El pedido no existe no existe");
-		}
+//		if(!this.pedidoProvider.pedidoExisteByID(linea.getNumeroPedido())) {
+//			return MessageResponseDto.fail("El pedido no existe no existe");
+//		}
 		if(linea.getCodigoArticulo()==null || !this.articuloProvider.articuloExisteByID(linea.getCodigoArticulo())) {
 			return MessageResponseDto.fail("El artículo no existe");
 		}
@@ -131,9 +131,9 @@ public class LineaProviderImpl implements LineaProvider {
 
 	@Override
 	public MessageResponseDto<List<LineaDto>> listLineasByPedido(Integer numPedido) {
-		if(!this.pedidoProvider.pedidoExisteByID(numPedido)) {
-			return MessageResponseDto.fail("El pedido no existe");
-		}
+//		if(!this.pedidoProvider.pedidoExisteByID(numPedido)) {
+//			return MessageResponseDto.fail("El pedido no existe");
+//		}
 		List<LineaEntity> listaEntity = this.lineaRepository.findByNumeroPedido(numPedido);
 		List<LineaDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);

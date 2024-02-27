@@ -6,13 +6,19 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.tfg.inventariado.dto.LineaDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.PedidoDto;
 import com.tfg.inventariado.entity.PedidoEntity;
 import com.tfg.inventariado.provider.CondicionPagoProvider;
 import com.tfg.inventariado.provider.EmpleadoProvider;
+import com.tfg.inventariado.provider.LineaProvider;
 import com.tfg.inventariado.provider.MedioPagoProvider;
 import com.tfg.inventariado.provider.OficinaProvider;
 import com.tfg.inventariado.provider.PedidoProvider;
@@ -43,6 +49,9 @@ public class PedidoProviderImpl implements PedidoProvider {
 	@Autowired
 	private MedioPagoProvider medioProvider;
 	
+	@Autowired
+	private LineaProvider lineaProvider;
+	
 	@Override
 	public PedidoDto convertToMapDto(PedidoEntity pedido) {
 		return modelMapper.map(pedido, PedidoDto.class);
@@ -56,7 +65,28 @@ public class PedidoProviderImpl implements PedidoProvider {
 	@Override
 	public List<PedidoDto> listAllPedidos() {
 		List<PedidoEntity> listaEntity = pedidoRepository.findAll();
-		return listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<PedidoDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		MessageResponseDto<List<LineaDto>> lineas;
+		for (PedidoDto pedidoDto : listaDto) {
+			lineas = lineaProvider.listLineasByPedido(pedidoDto.getNumeroPedido());
+			if(lineas.isSuccess()) {
+				int numeroUnidades = 0;
+				double costeTotal = 0;
+				for(LineaDto l : lineas.getMessage()){
+					numeroUnidades = numeroUnidades + l.getNumeroUnidades();
+					costeTotal = costeTotal + l.getPrecioLinea();
+				}
+				
+				pedidoDto.setNumeroUnidades(numeroUnidades);
+				if(numeroUnidades!=0) {
+					pedidoDto.setCosteUnitario(costeTotal/numeroUnidades);
+				}else {
+					pedidoDto.setCosteUnitario(0);
+				}	
+			}
+		}
+		
+		return listaDto;
 	}
 
 	@Override
@@ -162,6 +192,26 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 		Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(id);
 		if(optionalPedido.isPresent()) {
 			PedidoDto pedidoDto = this.convertToMapDto(optionalPedido.get());
+			
+			MessageResponseDto<List<LineaDto>> lineas = lineaProvider.listLineasByPedido(id);
+			if(lineas.isSuccess()) {
+				int numeroUnidades = 0;
+				double costeTotal = 0;
+				for(LineaDto l : lineas.getMessage()){
+					numeroUnidades = numeroUnidades + l.getNumeroUnidades();
+					costeTotal = costeTotal + l.getPrecioLinea();
+				}
+				
+				pedidoDto.setNumeroUnidades(numeroUnidades);
+				if(numeroUnidades!=0) {
+					pedidoDto.setCosteUnitario(costeTotal/numeroUnidades);
+				}else {
+					pedidoDto.setCosteUnitario(0);
+				}
+				
+			}
+			
+			
 			return MessageResponseDto.success(pedidoDto);
 		}else {
 			return MessageResponseDto.fail("No se encuentra ningún pedido con ese id");
@@ -194,6 +244,36 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 		List<PedidoEntity> listaPedioEntity = this.pedidoRepository.findByIdOficina(idOficina);
 		List<PedidoDto> listapedidoDto = listaPedioEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listapedidoDto);
+	}
+
+	@Override
+	public MessageResponseListDto<List<PedidoDto>> listAllPedidosSkipLimit(Integer page, Integer size) {
+		PageRequest pageable = PageRequest.of(page, size, Sort.by("numeroPedido"));
+		Page<PedidoEntity> pageablePedido = pedidoRepository.findAll(pageable);
+		
+		List<PedidoEntity> listaEntity = pageablePedido.getContent();
+		List<PedidoDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		MessageResponseDto<List<LineaDto>> lineas;
+		for (PedidoDto pedidoDto : listaDto) {
+			lineas = lineaProvider.listLineasByPedido(pedidoDto.getNumeroPedido());
+			if(lineas.isSuccess()) {
+				int numeroUnidades = 0;
+				double costeTotal = 0;
+				for(LineaDto l : lineas.getMessage()){
+					numeroUnidades = numeroUnidades + l.getNumeroUnidades();
+					costeTotal = costeTotal + l.getPrecioLinea();
+				}
+				
+				pedidoDto.setNumeroUnidades(numeroUnidades);
+				if(numeroUnidades!=0) {
+					pedidoDto.setCosteUnitario(costeTotal/numeroUnidades);
+				}else {
+					pedidoDto.setCosteUnitario(0);
+				}	
+			}
+		}
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) pedidoRepository.count());
 	}
 
 }
