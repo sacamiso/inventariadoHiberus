@@ -22,4 +22,6 @@ public interface PedidoProvider {
 	boolean pedidoExisteByID(Integer id);
 	
 	MessageResponseListDto<List<PedidoDto>> listAllPedidosSkipLimit(Integer page, Integer size);
+	MessageResponseDto<String> marcarRecibido(Integer id);
+	
 }

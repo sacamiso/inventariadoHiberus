@@ -56,6 +56,17 @@ public class PedidoController {
 		return new ResponseEntity<MessageResponseListDto<List<PedidoDto>>>(listaDto, HttpStatus.OK);
 	}
 	
+	@PutMapping("/recibido")
+	public ResponseEntity<MessageResponseDto<String>> recibirPedido(@RequestParam(value = "idP", required = true) Integer id) {
+		MessageResponseDto<String> messageResponse = this.pedidoProvider.marcarRecibido(id);
+		if (messageResponse.isSuccess()) {
+			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(MessageResponseDto.fail(messageResponse.getError()));
+		}
+	}
+	
 	@PutMapping("/editar/{id}")
 	public ResponseEntity<MessageResponseDto<String>> editPedidoByCodigo(@PathVariable("id") Integer id,
 			@RequestBody @Valid PedidoDto pedidoUpadate) {

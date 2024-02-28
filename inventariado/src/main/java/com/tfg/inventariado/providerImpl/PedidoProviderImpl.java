@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -10,14 +11,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.tfg.inventariado.dto.ArticuloDto;
+import com.tfg.inventariado.dto.InventarioDto;
 import com.tfg.inventariado.dto.LineaDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
+import com.tfg.inventariado.dto.OficinaDto;
 import com.tfg.inventariado.dto.PedidoDto;
 import com.tfg.inventariado.entity.PedidoEntity;
+import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.CondicionPagoProvider;
 import com.tfg.inventariado.provider.EmpleadoProvider;
+import com.tfg.inventariado.provider.InventarioProvider;
 import com.tfg.inventariado.provider.LineaProvider;
 import com.tfg.inventariado.provider.MedioPagoProvider;
 import com.tfg.inventariado.provider.OficinaProvider;
@@ -51,6 +58,12 @@ public class PedidoProviderImpl implements PedidoProvider {
 	
 	@Autowired
 	private LineaProvider lineaProvider;
+	
+	@Autowired
+	private InventarioProvider inventarioProvider;
+	
+	@Autowired
+	private ArticuloProvider articuloProvider;
 	
 	@Override
 	public PedidoDto convertToMapDto(PedidoEntity pedido) {
@@ -274,6 +287,50 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 		}
 		
 		return MessageResponseListDto.success(listaDto, page, size,(int) pedidoRepository.count());
+	}
+
+	@Override
+	@Transactional
+	public MessageResponseDto<String> marcarRecibido(Integer id) {
+		Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(id);
+		if(optionalPedido.isPresent()) {
+			PedidoEntity pedidoToUpdate = optionalPedido.get();
+			
+			pedidoToUpdate.setFechaRecepcion(LocalDate.now());
+			
+			pedidoRepository.save(pedidoToUpdate);
+			
+			OficinaDto of = oficinaProvider.getOficinaById(pedidoToUpdate.getIdOficina()).getMessage();
+			MessageResponseDto<List<LineaDto>> lineas = lineaProvider.listLineasByPedido(pedidoToUpdate.getNumeroPedido());
+			ArticuloDto art;
+			MessageResponseDto<InventarioDto> inventario;
+			InventarioDto inventarioDto;
+			MessageResponseDto<String>  msgInventario;
+			
+			if(lineas.isSuccess()) {
+				for (LineaDto linea : lineas.getMessage()) {
+					art = articuloProvider.convertToMapDto(linea.getArticulo()) ;
+					inventario = inventarioProvider.getInventarioById(pedidoToUpdate.getIdOficina(), art.getCodigoArticulo());
+
+					if(inventario.isSuccess()) {
+						inventarioDto = new InventarioDto(art.getCodigoArticulo(), pedidoToUpdate.getIdOficina(), inventario.getMessage().getStock()+ linea.getNumeroUnidades() ,art,of );
+						msgInventario = inventarioProvider.editInventario(inventarioDto, pedidoToUpdate.getIdOficina(),art.getCodigoArticulo());
+					}else {
+						inventarioDto = new InventarioDto(art.getCodigoArticulo(), pedidoToUpdate.getIdOficina(), linea.getNumeroUnidades() ,art,of );
+						msgInventario = inventarioProvider.addInventario(inventarioDto);
+					}
+					if(!msgInventario.isSuccess()) {
+						return MessageResponseDto.fail(msgInventario.getError());
+					}
+				}
+			}
+			
+			
+			return MessageResponseDto.success("Pedido recibido");
+			
+		}else {
+			return MessageResponseDto.fail("El pedido que se desea marcar como recibido no existe");
+		}
 	}
 
 }
