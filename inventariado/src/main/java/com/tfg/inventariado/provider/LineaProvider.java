@@ -17,5 +17,7 @@ public interface LineaProvider {
 	
 	MessageResponseDto<List<LineaDto>> listLineasByPedido(Integer numPedido);
 	
+	MessageResponseDto<String> addListLinea(List<LineaDto> lineas);
+	
 	boolean lineaExisteByID(Integer numPedido, Integer numLinea);
 }

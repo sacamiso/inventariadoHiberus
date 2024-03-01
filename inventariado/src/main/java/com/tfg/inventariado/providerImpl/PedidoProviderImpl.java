@@ -102,21 +102,20 @@ public class PedidoProviderImpl implements PedidoProvider {
 		return listaDto;
 	}
 
+	@Transactional
 	@Override
 	public MessageResponseDto<String> addPedido(PedidoDto pedido) {
 		
 		if(pedido.getNumeroPedido()!=null && pedidoRepository.findById(pedido.getNumeroPedido()).isPresent()) {
 			return MessageResponseDto.fail("El pedido ya existe");
 		}
-		if(pedido.getFechaPedido() == null) {
-			return MessageResponseDto.fail("La fecha de pedido es obligatoria");
-		}
+		
+		pedido.setFechaPedido(LocalDate.now());
+		
 		if(pedido.getIvaPedido() == 0) {
 			return MessageResponseDto.fail("El iva es obligatorio");
 		}
-		if(pedido.getCosteTotal() == 0) {
-			return MessageResponseDto.fail("El coste total es obligatorio");
-		}
+		
 		if(pedido.getIdEmpleado() == null || !this.empleadoProvider.empleadoExisteByCodigo(pedido.getIdEmpleado())) {
 			return MessageResponseDto.fail("El empleado no existe");
 		}
@@ -139,8 +138,45 @@ public class PedidoProviderImpl implements PedidoProvider {
 		if(pedido.getMedioPago() == null || !this.medioProvider.medioExisteByCodigo(pedido.getMedioPago())) {
 			return MessageResponseDto.fail("El medio de pago no existe");
 		}
+		
+		List<LineaDto> listLinea = pedido.getLineas();
+		
+		
+		double costeTotal = 0;
+		int unidadesTotal = 0;
+		
+		
+		for(LineaDto l: listLinea) {
+			if(articuloProvider.articuloExisteByID(l.getCodigoArticulo())) {
+				l.setArticulo(this.articuloProvider.convertToMapEntity(articuloProvider.getArticuloById(l.getCodigoArticulo()).getMessage()));
+				l.setPrecioLinea(l.getArticulo().getPrecioUnitario() * l.getNumeroUnidades() * (100 - l.getDescuento())/100);
+				
+				costeTotal = costeTotal + l.getPrecioLinea();
+				unidadesTotal = unidadesTotal + l.getNumeroUnidades();
+				
+			}
+		}
+		
+		
+		pedido.setCosteTotal(costeTotal);
+		pedido.setCosteUnitario(costeTotal / unidadesTotal);
+		pedido.setNumeroUnidades(unidadesTotal);
+		
+		
 		PedidoEntity newPedido = convertToMapEntity(pedido);
 		newPedido = pedidoRepository.save(newPedido);
+		
+		for(LineaDto l: listLinea) {
+			l.setNumeroPedido(newPedido.getNumeroPedido());
+		}
+		
+		MessageResponseDto<String> msgLineas = this.lineaProvider.addListLinea(listLinea);
+		
+		if(!msgLineas.isSuccess()) {
+			return msgLineas;
+		}
+		
+		
 		return MessageResponseDto.success("Pedido añadido con éxito");
 	}
 

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tfg.inventariado.dto.LineaDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
@@ -14,7 +15,6 @@ import com.tfg.inventariado.entity.LineaEntity;
 import com.tfg.inventariado.entity.LineaEntityID;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.LineaProvider;
-import com.tfg.inventariado.provider.PedidoProvider;
 import com.tfg.inventariado.repository.LineaRepository;
 
 @Service
@@ -47,9 +47,8 @@ public class LineaProviderImpl implements LineaProvider {
 		List<LineaEntity> listaEntity = lineaRepository.findAll();
 		return listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 	}
-
-	@Override
-	public MessageResponseDto<String> addLinea(LineaDto linea) {
+	
+	private MessageResponseDto<String> validaLinea(LineaDto linea){
 		if(linea.getNumeroPedido()==null) {
 			return MessageResponseDto.fail("El número de pedido es obligatorio");
 		}
@@ -75,7 +74,33 @@ public class LineaProviderImpl implements LineaProvider {
 		if(linea.getDescuento()<0) {
 			return MessageResponseDto.fail("No se puede aplicar un descuento negativo");
 		}
+		return MessageResponseDto.success("validado");
+	}
+
+	@Transactional
+	@Override
+	public MessageResponseDto<String> addListLinea(List<LineaDto> lineas) {
+		MessageResponseDto<String> validacion;
+		for (LineaDto l : lineas) {
+			validacion = validaLinea(l);
+			
+			if(!validacion.isSuccess()) {
+				return validacion;
+			}
+			
+		}
+		List<LineaEntity> list =  lineas.stream().map(this::convertToMapEntity).collect(Collectors.toList());
+		lineaRepository.saveAll(list);
+		return MessageResponseDto.success("Líneas añadidas con éxito");
+	}
+	
+	@Override
+	public MessageResponseDto<String> addLinea(LineaDto linea) {
+		MessageResponseDto<String> validacion = validaLinea(linea);
 		
+		if(!validacion.isSuccess()) {
+			return validacion;
+		}
 		LineaEntity newLinea = convertToMapEntity(linea);
 		newLinea = lineaRepository.save(newLinea);
 		return MessageResponseDto.success("Línea añadida con éxito");
@@ -145,5 +170,7 @@ public class LineaProviderImpl implements LineaProvider {
 		Optional<LineaEntity> optionalLinea = lineaRepository.findById(id);
 		return optionalLinea    .isPresent() ? true : false;
 	}
+
+	
 
 }

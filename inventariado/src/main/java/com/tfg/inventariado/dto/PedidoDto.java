@@ -1,6 +1,7 @@
 package com.tfg.inventariado.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import com.tfg.inventariado.entity.CondicionPagoEntity;
 import com.tfg.inventariado.entity.EmpleadoEntity;
@@ -40,5 +41,7 @@ public class PedidoDto {
 	private OficinaEntity oficina;
 	private CondicionPagoEntity condicion;
 	private MedioPagoEntity medio;
+	
+	private List<LineaDto> lineas;
 	
 }
