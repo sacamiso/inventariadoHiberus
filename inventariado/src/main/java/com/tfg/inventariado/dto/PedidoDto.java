@@ -3,12 +3,6 @@ package com.tfg.inventariado.dto;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.tfg.inventariado.entity.CondicionPagoEntity;
-import com.tfg.inventariado.entity.EmpleadoEntity;
-import com.tfg.inventariado.entity.MedioPagoEntity;
-import com.tfg.inventariado.entity.OficinaEntity;
-import com.tfg.inventariado.entity.ProveedorEntity;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,11 +30,11 @@ public class PedidoDto {
 	private double costeUnitario;
 	private Integer numeroUnidades;
 	
-	private EmpleadoEntity empleado;
-	private ProveedorEntity proveedor;
-	private OficinaEntity oficina;
-	private CondicionPagoEntity condicion;
-	private MedioPagoEntity medio;
+	private EmpleadoDto empleado;
+	private ProveedorDto proveedor;
+	private OficinaDto oficina;
+	private CondicionPagoDto condicion;
+	private MedioPagoDto medio;
 	
 	private List<LineaDto> lineas;
 	

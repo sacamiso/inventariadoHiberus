@@ -20,4 +20,7 @@ public class SalidaDto {
     private LocalDate fechaSalida;
 	private Integer idOficina;
 	private Integer codArticulo;
+	
+	private OficinaDto oficina;
+	private ArticuloDto articulo;
 }

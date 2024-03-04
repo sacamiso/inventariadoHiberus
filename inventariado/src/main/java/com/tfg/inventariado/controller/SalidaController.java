@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.SalidaDto;
 import com.tfg.inventariado.provider.SalidaProvider;
 
@@ -46,6 +48,13 @@ public class SalidaController {
 	public ResponseEntity<List<SalidaDto>> listarSalidas() {
 		List<SalidaDto> listaDto = this.salidaProvider.listAllSalidas();
 		return new ResponseEntity<List<SalidaDto>>(listaDto, HttpStatus.OK);
+	}
+	
+	@GetMapping("/listAllPag")
+	public ResponseEntity<MessageResponseListDto<List<SalidaDto>>> listarSalidasPag(@RequestParam(value = "limit", required = false) Integer limit,
+		    @RequestParam(value = "skip", required = false) Integer skip) {
+		MessageResponseListDto<List<SalidaDto>> listaDto = this.salidaProvider.listAllSalidasSkipLimit(skip,limit);
+		return new ResponseEntity<MessageResponseListDto<List<SalidaDto>>>(listaDto, HttpStatus.OK);
 	}
 	
 	@PutMapping("/editar/{id}")

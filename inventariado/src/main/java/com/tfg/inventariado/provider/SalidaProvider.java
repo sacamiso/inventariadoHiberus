@@ -3,6 +3,7 @@ package com.tfg.inventariado.provider;
 import java.util.List;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.SalidaDto;
 import com.tfg.inventariado.entity.SalidaEntity;
 
@@ -19,4 +20,7 @@ public interface SalidaProvider {
 	MessageResponseDto<List<SalidaDto>> listSalidaByArticulo(Integer idArticulo);
 	
 	boolean salidaExisteByID(Integer id);
+	
+	MessageResponseListDto<List<SalidaDto>> listAllSalidasSkipLimit(Integer page, Integer size);
+
 }

@@ -7,12 +7,16 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tfg.inventariado.dto.ArticuloDto;
 import com.tfg.inventariado.dto.InventarioDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.OficinaDto;
 import com.tfg.inventariado.dto.SalidaDto;
 import com.tfg.inventariado.entity.SalidaEntity;
@@ -207,6 +211,18 @@ public class SalidaProviderImpl implements SalidaProvider {
 		Optional<SalidaEntity> optional = saldiaRepository.findById(id);
 		return optional.isPresent() ? true : false;
 
+	}
+
+	@Override
+	public MessageResponseListDto<List<SalidaDto>> listAllSalidasSkipLimit(Integer page, Integer size) {
+		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaSalida"));
+		Page<SalidaEntity> pageablesalida = saldiaRepository.findAll(pageable);
+		
+		List<SalidaEntity> listaEntity = pageablesalida.getContent();
+		List<SalidaDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) saldiaRepository.count());
+		
 	}
 
 }

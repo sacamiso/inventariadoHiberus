@@ -148,7 +148,7 @@ public class PedidoProviderImpl implements PedidoProvider {
 		
 		for(LineaDto l: listLinea) {
 			if(articuloProvider.articuloExisteByID(l.getCodigoArticulo())) {
-				l.setArticulo(this.articuloProvider.convertToMapEntity(articuloProvider.getArticuloById(l.getCodigoArticulo()).getMessage()));
+				l.setArticulo(articuloProvider.getArticuloById(l.getCodigoArticulo()).getMessage());
 				l.setPrecioLinea(l.getArticulo().getPrecioUnitario() * l.getNumeroUnidades() * (100 - l.getDescuento())/100);
 				
 				costeTotal = costeTotal + l.getPrecioLinea();
@@ -297,7 +297,7 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 
 	@Override
 	public MessageResponseListDto<List<PedidoDto>> listAllPedidosSkipLimit(Integer page, Integer size) {
-		PageRequest pageable = PageRequest.of(page, size, Sort.by("numeroPedido"));
+		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaPedido"));
 		Page<PedidoEntity> pageablePedido = pedidoRepository.findAll(pageable);
 		
 		List<PedidoEntity> listaEntity = pageablePedido.getContent();
@@ -345,7 +345,7 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 			
 			if(lineas.isSuccess()) {
 				for (LineaDto linea : lineas.getMessage()) {
-					art = articuloProvider.convertToMapDto(linea.getArticulo()) ;
+					art = linea.getArticulo();
 					inventario = inventarioProvider.getInventarioById(pedidoToUpdate.getIdOficina(), art.getCodigoArticulo());
 
 					if(inventario.isSuccess()) {
