@@ -158,7 +158,7 @@ public class PedidoProviderImpl implements PedidoProvider {
 		}
 		
 		
-		pedido.setCosteTotal(costeTotal);
+		pedido.setCosteTotal(costeTotal + pedido.getCostesEnvio());
 		pedido.setCosteUnitario(costeTotal / unidadesTotal);
 		pedido.setNumeroUnidades(unidadesTotal);
 		
