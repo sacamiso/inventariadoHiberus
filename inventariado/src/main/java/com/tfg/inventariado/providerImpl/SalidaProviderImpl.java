@@ -73,9 +73,6 @@ public class SalidaProviderImpl implements SalidaProvider {
 		if(salida.getCodArticulo()==null) {
 			return MessageResponseDto.fail("El artículo es obligatorio");
 		}
-		if(salida.getCodArticulo()!=null && saldiaRepository.findById(salida.getIdSalida()).isPresent()) {
-			return MessageResponseDto.fail("La salida ya existe");
-		}
 		if(!this.articuloProvider.articuloExisteByID(salida.getCodArticulo())) {
 			return MessageResponseDto.fail("El artículo no existe");
 		}
@@ -89,7 +86,7 @@ public class SalidaProviderImpl implements SalidaProvider {
 		if(inventario.getMessage().getStock() < salida.getNumUnidades()) {
 			return MessageResponseDto.fail("No se puede dar salida a más artículos de los existentes");
 		}
-		if(salida.getFechaSalida()==null) {
+		if(salida.getFechaSalida()== null) {
 			salida.setFechaSalida(LocalDate.now());
 		}
 		if(salida.getFechaSalida().isAfter(LocalDate.now())) {
