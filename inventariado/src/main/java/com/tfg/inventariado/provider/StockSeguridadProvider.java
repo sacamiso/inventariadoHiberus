@@ -3,6 +3,7 @@ package com.tfg.inventariado.provider;
 import java.util.List;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.StockSeguridadDto;
 import com.tfg.inventariado.entity.StockSeguridadEntity;
 
@@ -18,4 +19,6 @@ public interface StockSeguridadProvider {
 	MessageResponseDto<List<StockSeguridadDto>> listStockSeguridadBySubcategoria(String cat, String subCat);
 	
 	boolean stockSeguridadExisteByID(String cat, String subCat, Integer idOficina);
+	
+	MessageResponseListDto<List<StockSeguridadDto>> listAllStockSeguridadSkipLimit(Integer page, Integer size);
 }

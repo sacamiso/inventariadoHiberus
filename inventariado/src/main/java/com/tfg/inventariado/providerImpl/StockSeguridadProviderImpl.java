@@ -6,9 +6,13 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.StockSeguridadDto;
 import com.tfg.inventariado.entity.StockSeguridadEntity;
 import com.tfg.inventariado.entity.StockSeguridadEntityID;
@@ -149,6 +153,17 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		StockSeguridadEntityID id = new StockSeguridadEntityID(subCat, cat, idOficina);
 		Optional<StockSeguridadEntity> optional= stockSeguridadRepository.findById(id);
 		return optional.isPresent() ? true : false;
+	}
+
+	@Override
+	public MessageResponseListDto<List<StockSeguridadDto>> listAllStockSeguridadSkipLimit(Integer page, Integer size) {
+		PageRequest pageable = PageRequest.of(page, size, Sort.by("idOficina"));
+		Page<StockSeguridadEntity> pageableSS = stockSeguridadRepository.findAll(pageable);
+		
+		List<StockSeguridadEntity> listaEntity = pageableSS.getContent();
+		List<StockSeguridadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) stockSeguridadRepository.count());
 	}
 
 }

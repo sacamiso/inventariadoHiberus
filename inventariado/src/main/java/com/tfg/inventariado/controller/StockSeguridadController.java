@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.StockSeguridadDto;
 import com.tfg.inventariado.provider.StockSeguridadProvider;
 
@@ -39,6 +41,13 @@ public class StockSeguridadController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(MessageResponseDto.fail(messageResponse.getError()));
 		}
+	}
+	
+	@GetMapping("/listAllPag")
+	public ResponseEntity<MessageResponseListDto<List<StockSeguridadDto>>> listarStockPag(@RequestParam(value = "limit", required = false) Integer limit,
+		    @RequestParam(value = "skip", required = false) Integer skip) {
+		MessageResponseListDto<List<StockSeguridadDto>> listaDto = this.seguridadProvider.listAllStockSeguridadSkipLimit(skip,limit);
+		return new ResponseEntity<MessageResponseListDto<List<StockSeguridadDto>>>(listaDto, HttpStatus.OK);
 	}
 	
 	@GetMapping("/listAll")

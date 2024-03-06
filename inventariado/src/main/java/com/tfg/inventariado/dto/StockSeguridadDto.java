@@ -16,4 +16,6 @@ public class StockSeguridadDto {
 	private Integer idOficina;
 	private Integer cantidad;
 	private Integer plazoEntregaMedio;
+	
+	private OficinaDto oficina;
 }

@@ -4,6 +4,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -35,4 +37,9 @@ public class StockSeguridadEntity {
 	
 	@Column(name="plazo_entrega_medio", nullable = false)
 	private Integer plazoEntregaMedio;
+	
+	@ManyToOne
+	@JoinColumn(name="id_oficina", referencedColumnName="id_oficina", insertable = false, updatable = false)
+	//Primero el campo de esta tabla y luego a la que referencia
+	private OficinaEntity oficina;
 }
