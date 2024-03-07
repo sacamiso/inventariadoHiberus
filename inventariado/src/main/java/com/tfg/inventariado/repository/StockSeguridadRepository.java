@@ -18,4 +18,5 @@ public interface StockSeguridadRepository extends JpaRepository<StockSeguridadEn
 	
 	Page<StockSeguridadEntity> findAll(Pageable pageable);
 	long count();
+	void deleteByIdOficina(int idOficina);
 }

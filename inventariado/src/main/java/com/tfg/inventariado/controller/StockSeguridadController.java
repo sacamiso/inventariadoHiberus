@@ -43,6 +43,19 @@ public class StockSeguridadController {
 		}
 	}
 	
+	@PostMapping("/save")
+	public ResponseEntity<MessageResponseDto<?>> guardarStockSeguridad(@RequestBody @Valid List<StockSeguridadDto> stockSguridadRequest) {
+		
+		MessageResponseDto<String> messageResponse = this.seguridadProvider.guardarStockSeguridadOf(stockSguridadRequest);
+
+		if (messageResponse.isSuccess()) {
+			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(MessageResponseDto.fail(messageResponse.getError()));
+		}
+	}
+	
 	@GetMapping("/listAllPag")
 	public ResponseEntity<MessageResponseListDto<List<StockSeguridadDto>>> listarStockPag(@RequestParam(value = "limit", required = false) Integer limit,
 		    @RequestParam(value = "skip", required = false) Integer skip) {

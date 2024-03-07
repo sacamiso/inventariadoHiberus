@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
@@ -55,9 +56,8 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		List<StockSeguridadEntity> listaEntity = stockSeguridadRepository.findAll();
 		return listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 	}
-
-	@Override
-	public MessageResponseDto<String> addStockSteguridad(StockSeguridadDto seguridad) {
+	
+	private MessageResponseDto<String> validaSS(StockSeguridadDto seguridad) {
 		if(seguridad.getCodCategoria()==null || !this.categoriaProvider.categoriaExisteByCodigo(seguridad.getCodCategoria())) {
 			return MessageResponseDto.fail("La categoría no existe");
 		}
@@ -67,17 +67,28 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		if(seguridad.getIdOficina()==null || !this.oficinaProvider.oficinaExisteByID(seguridad.getIdOficina())) {
 			return MessageResponseDto.fail("La oficina no existe");
 		}
-		StockSeguridadEntityID id = new StockSeguridadEntityID(seguridad.getCodSubcategoria(), seguridad.getCodCategoria(), seguridad.getIdOficina());
-		
-		if(stockSeguridadRepository.findById(id).isPresent()) {
-			return MessageResponseDto.fail("El stock de seguridad ya existe, debe editarlo");
-		}
 		if(seguridad.getCantidad()==null || seguridad.getCantidad()<=0) {
 			return MessageResponseDto.fail("Como mínimo la cantidad debe ser uno");
 		}
 		if(seguridad.getPlazoEntregaMedio()==null || seguridad.getPlazoEntregaMedio()<=0) {
 			return MessageResponseDto.fail("Como mínimo el plazo de entrega medio debe ser uno");
 		}
+		return MessageResponseDto.success("correcto");
+	}
+
+	@Override
+	public MessageResponseDto<String> addStockSteguridad(StockSeguridadDto seguridad) {
+		MessageResponseDto<String> validacion1 = this.validaSS(seguridad);
+		if(!validacion1.isSuccess()) {
+			return validacion1;
+		}
+		
+		StockSeguridadEntityID id = new StockSeguridadEntityID(seguridad.getCodSubcategoria(), seguridad.getCodCategoria(), seguridad.getIdOficina());
+		
+		if(stockSeguridadRepository.findById(id).isPresent()) {
+			return MessageResponseDto.fail("El stock de seguridad ya existe, debe editarlo");
+		}
+		
 		StockSeguridadEntity newStock = convertToMapEntity(seguridad);
 		newStock = stockSeguridadRepository.save(newStock);
 		return MessageResponseDto.success("Stock de seguridad añadido con éxito");
@@ -166,4 +177,28 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		return MessageResponseListDto.success(listaDto, page, size,(int) stockSeguridadRepository.count());
 	}
 
+	@Override
+	@Transactional
+	public MessageResponseDto<String> guardarStockSeguridadOf(List<StockSeguridadDto> seguridad) {
+		MessageResponseDto<String> validacion1;
+		int idOF = 0;
+		for(StockSeguridadDto s : seguridad) {
+			validacion1 = this.validaSS(s);
+			idOF = s.getIdOficina();
+			if(!validacion1.isSuccess()) {
+				return validacion1;
+			}
+		}
+		
+		validacion1 = this.guardar(seguridad, idOF);
+		return validacion1;
+	}
+	
+	
+	private MessageResponseDto<String> guardar(List<StockSeguridadDto> seguridad, int idOficina) {
+		List<StockSeguridadEntity> listaEntity = seguridad.stream().map(this::convertToMapEntity).collect(Collectors.toList());
+		this.stockSeguridadRepository.deleteByIdOficina(idOficina);
+		this.stockSeguridadRepository.saveAll(listaEntity);
+		return MessageResponseDto.success("Stock de seguridad guardado con éxito");
+	}
 }

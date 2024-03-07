@@ -21,4 +21,5 @@ public interface StockSeguridadProvider {
 	boolean stockSeguridadExisteByID(String cat, String subCat, Integer idOficina);
 	
 	MessageResponseListDto<List<StockSeguridadDto>> listAllStockSeguridadSkipLimit(Integer page, Integer size);
+	MessageResponseDto<String> guardarStockSeguridadOf(List<StockSeguridadDto> seguridad);
 }
