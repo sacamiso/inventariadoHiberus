@@ -6,11 +6,17 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.SalidaDto;
 import com.tfg.inventariado.dto.UnidadDto;
+import com.tfg.inventariado.dto.UnidadFilterDto;
 import com.tfg.inventariado.entity.UnidadEntity;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.EstadoProvider;
@@ -191,7 +197,7 @@ public class UnidadProviderImpl implements UnidadProvider {
 
 	@Override
 	public MessageResponseDto<List<UnidadDto>> listUnidadNODisponibles() {
-		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdSalidaIsNotNull();
+		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdSalidaIsNotNullOrCodEstado("S");
 		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
@@ -258,6 +264,42 @@ public class UnidadProviderImpl implements UnidadProvider {
 		}else {
 			return MessageResponseDto.fail("La unidad que se desea editar no existe");
 		}
+	}
+
+	@Override
+	public MessageResponseListDto<List<UnidadDto>> listAllUnidadesSkipLimit(Integer page, Integer size, UnidadFilterDto filtros) {
+
+		Specification<UnidadEntity> spec = Specification.where(null);
+		if (filtros != null) {
+			if (filtros.getCodEstado()!=null && !filtros.getCodEstado().isEmpty()) {
+	            String codEstado = filtros.getCodEstado();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codEstado"), codEstado));
+	        }
+			if (filtros.getIdOficina()!= null && filtros.getIdOficina()!= 0) {
+	            Integer idOficina = filtros.getIdOficina();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOficina));
+	        }
+			if (filtros.getNumeroPedido()!= null && filtros.getNumeroPedido()!= 0) {
+	            Integer numeroPedido = filtros.getNumeroPedido();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("numeroPedido"), numeroPedido));
+	        }
+			if (filtros.getIdSalida()!= null && filtros.getIdSalida()!= 0) {
+	            Integer idSalida = filtros.getIdSalida();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idSalida"), idSalida));
+	        }
+			if (filtros.getCodArticulo()!= null && filtros.getCodArticulo()!= 0) {
+	            Integer codArticulo = filtros.getCodArticulo();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codArticulo"), codArticulo));
+	        }
+		}
+		
+		PageRequest pageable = PageRequest.of(page, size, Sort.by("idOficina", "codArticulo", "codigoInterno"));
+		Page<UnidadEntity> pageableUnidad = unidadRepository.findAll(spec, pageable);
+		
+		List<UnidadEntity> listaEntity = pageableUnidad.getContent();
+		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) unidadRepository.count(spec));
 	}
 
 }

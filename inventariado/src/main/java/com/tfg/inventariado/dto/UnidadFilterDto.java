@@ -9,18 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
-public class UnidadDto {
-
-	private Integer codigoInterno;
+public class UnidadFilterDto {
 	private String codEstado;
 	private Integer numeroPedido;
 	private Integer idSalida;
 	private Integer idOficina;
 	private Integer codArticulo;
-	
-	private EstadoDto estado;
-	private PedidoDto pedido;
-	private SalidaDto salida;
-	private OficinaDto oficina;
-	private ArticuloDto articulo;
 }
