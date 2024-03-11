@@ -15,4 +15,5 @@ public interface AsignacionRepository extends JpaRepository<AsignacionEntity, In
 	List<AsignacionEntity> findByFechaFinIsNullAndIdEmpleado(Integer idEmpleado);
 	List<AsignacionEntity> findByFechaFinIsNotNullAndIdEmpleado(Integer idEmpleado);
 	List<AsignacionEntity> findByCodUnidad(Integer codUnidad);
+	List<AsignacionEntity> findByCodUnidadAndFechaFinIsNull(Integer codUnidad);
 }

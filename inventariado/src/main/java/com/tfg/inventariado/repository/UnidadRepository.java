@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.tfg.inventariado.entity.UnidadEntity;
@@ -23,4 +25,7 @@ public interface UnidadRepository  extends JpaRepository<UnidadEntity, Integer> 
     
     Page<UnidadEntity> findAll(Specification<UnidadEntity> spec, Pageable pageable);
 	long count(Specification<UnidadEntity> spec);
+	
+	@Query("SELECT COUNT(u) FROM UnidadEntity u WHERE u.idSalida = :idSalida")
+    long countBySalidaId(@Param("idSalida") Integer idSalida);
 }

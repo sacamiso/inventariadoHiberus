@@ -21,5 +21,7 @@ public interface AsignacionProvider {
 	MessageResponseDto<List<AsignacionDto>> listAsignacionByEmpleadoFinalizadas(Integer idEmpleado);
 	MessageResponseDto<List<AsignacionDto>> listAsignacionByUnidad(Integer codUnidad);
 	
+	MessageResponseDto<List<AsignacionDto>> listAsignacionByUnidadSinFinalizar(Integer codUnidad);
+	
 	boolean asignacionExisteByID(Integer id);
 }

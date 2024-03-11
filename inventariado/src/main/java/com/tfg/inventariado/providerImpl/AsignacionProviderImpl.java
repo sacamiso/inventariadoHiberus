@@ -190,6 +190,16 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 	}
 
 	@Override
+	public MessageResponseDto<List<AsignacionDto>> listAsignacionByUnidadSinFinalizar(Integer codUnidad) {
+		if(!this.unidadProvider.unidadExisteByID(codUnidad)) {
+			return MessageResponseDto.fail("La unidad no existe");
+		}
+		List<AsignacionEntity> listaEntity = this.asignacionRepository.findByCodUnidadAndFechaFinIsNull(codUnidad);
+		List<AsignacionDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return MessageResponseDto.success(listaDto);
+	}
+	
+	@Override
 	public boolean asignacionExisteByID(Integer id) {
 		Optional<AsignacionEntity> optionalAsignacion= asignacionRepository.findById(id);
 		return optionalAsignacion.isPresent() ? true : false;

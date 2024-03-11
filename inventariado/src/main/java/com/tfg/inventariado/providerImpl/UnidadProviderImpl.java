@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -11,12 +12,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.SalidaDto;
 import com.tfg.inventariado.dto.UnidadDto;
 import com.tfg.inventariado.dto.UnidadFilterDto;
+import com.tfg.inventariado.entity.AsignacionEntity;
 import com.tfg.inventariado.entity.UnidadEntity;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.EstadoProvider;
@@ -53,6 +56,12 @@ public class UnidadProviderImpl implements UnidadProvider {
 	
 	@Autowired
 	private SalidaProvider salidaProvider;
+	
+//	@Autowired
+//	private AsignacionProvider asignacionProvider;
+	
+	@Autowired
+	private AsignacionRepository asignacionRepository;
 	
 	@Override
 	public UnidadDto convertToMapDto(UnidadEntity unidad) {
@@ -116,27 +125,51 @@ public class UnidadProviderImpl implements UnidadProvider {
 	}
 
 	@Override
+	@Transactional
 	public MessageResponseDto<String> editUnidad(UnidadDto unidad, Integer id) {
 		Optional<UnidadEntity> optionalUnidad = unidadRepository.findById(id);
 		if(optionalUnidad.isPresent()) {
 			
 			UnidadEntity unidadToUpdate = optionalUnidad.get();
 			
-			this.actualizarCampos(unidadToUpdate, unidad);
-			
+			MessageResponseDto<String> msg = this.actualizarCampos(unidadToUpdate, unidad);
+			if(!msg.isSuccess()) {
+				return msg;
+			}
 			unidadRepository.save(unidadToUpdate);
 			
-			return MessageResponseDto.success("Unidad editada con éxito");
+			return msg;
 			
 		}else {
 			return MessageResponseDto.fail("La unidad que se desea editar no existe");
 		}
 	}
 	
-	private void actualizarCampos(UnidadEntity unidad, UnidadDto unidadToUpdate) {
+	private MessageResponseDto<String> actualizarCampos(UnidadEntity unidad, UnidadDto unidadToUpdate) {
 		
 		if(unidadToUpdate.getCodEstado()!=null && !unidadToUpdate.getCodEstado().isEmpty() && this.estadoProvider.estadoExisteByCodigo(unidadToUpdate.getCodEstado())) {
-			unidad.setCodEstado(unidadToUpdate.getCodEstado());
+			if(unidadToUpdate.getCodEstado().equals("OP")&&unidad.getCodEstado().equals("MANT")) {
+				unidad.setCodEstado(unidadToUpdate.getCodEstado());
+			}
+			else if(unidadToUpdate.getCodEstado().equals("MANT")&&unidad.getCodEstado().equals("OP")) {
+				List<AsignacionEntity> listaEntity = this.asignacionRepository.findByCodUnidadAndFechaFinIsNull(unidad.getCodigoInterno());
+				if(listaEntity.size()>0) {
+					return MessageResponseDto.fail("No se puede cambiar el estado a MANT ya que la unidad está asignada");
+				}
+				unidad.setCodEstado(unidadToUpdate.getCodEstado());
+			}
+			else if(unidadToUpdate.getCodEstado().equals("S")&&unidad.getCodEstado().equals("OP") || unidadToUpdate.getCodEstado().equals("S")&&unidad.getCodEstado().equals("MANT")) {
+				List<AsignacionEntity> listaEntity = this.asignacionRepository.findByCodUnidadAndFechaFinIsNull(unidad.getCodigoInterno());
+				if(listaEntity.size()>0) {
+					return MessageResponseDto.fail("No se puede cambiar el estado a S ya que la unidad está asignada");
+				}
+				unidad.setCodEstado(unidadToUpdate.getCodEstado());
+			}
+			else if(unidadToUpdate.getCodEstado().equals("OP")&& unidad.getCodEstado().equals("S") || unidadToUpdate.getCodEstado().equals("MANT")&&unidad.getCodEstado().equals("S")) {
+				unidad.setCodEstado(unidadToUpdate.getCodEstado());
+				unidad.setIdSalida(null);
+			}
+			
 		}
 		if(unidadToUpdate.getNumeroPedido()!= null && this.pedidoProvider.pedidoExisteByID(unidadToUpdate.getNumeroPedido())) {
 			unidad.setNumeroPedido(unidadToUpdate.getNumeroPedido());
@@ -148,13 +181,21 @@ public class UnidadProviderImpl implements UnidadProvider {
 			unidad.setIdOficina(unidadToUpdate.getIdOficina());
 		}
 		if(unidadToUpdate.getIdSalida()!= null && this.salidaProvider.salidaExisteByID(unidadToUpdate.getIdSalida())) {
-			MessageResponseDto<SalidaDto> salida = this.salidaProvider.getSalidaById(unidad.getIdSalida());
-			if(salida.getMessage().getCodArticulo() == unidadToUpdate.getCodArticulo() && salida.getMessage().getIdOficina() == unidadToUpdate.getIdOficina()) {
-				unidad.setIdSalida(unidadToUpdate.getIdSalida());
+			MessageResponseDto<SalidaDto> salida = this.salidaProvider.getSalidaById(unidadToUpdate.getIdSalida());
+			if( salida.getMessage().getIdOficina() != unidad.getIdOficina()) {
+				return MessageResponseDto.fail("La salida no es de la misma oficina que la unidad");
+
 			}
+			if(salida.getMessage().getCodArticulo() != unidad.getCodArticulo()) {
+				return MessageResponseDto.fail("La salida no es del mismo tipo de articulos que la unidad");
+
+			}
+			if(salida.getMessage().getNumUnidades() <= unidadRepository.countBySalidaId(unidadToUpdate.getIdSalida())) {
+				return MessageResponseDto.fail("La salida no admite más unidades");
+			}
+			unidad.setIdSalida(unidadToUpdate.getIdSalida());
 		}	
-			//Se podría comprobar si se ha dado salida ya a tantas unidades como pone en la salida y por ello no se puede dar salida a esta
-			
+		return MessageResponseDto.success("Unidad editada con éxito"); 	
 	}
 
 	@Override
@@ -279,13 +320,13 @@ public class UnidadProviderImpl implements UnidadProvider {
 	            Integer idOficina = filtros.getIdOficina();
 	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOficina));
 	        }
-			if (filtros.getNumeroPedido()!= null && filtros.getNumeroPedido()!= 0) {
-	            Integer numeroPedido = filtros.getNumeroPedido();
-	            spec = spec.and((root, query, cb) -> cb.equal(root.get("numeroPedido"), numeroPedido));
+			if (filtros.getFechaPedido() != null) {
+				LocalDate fechaPedido = filtros.getFechaPedido();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.join("pedido").get("fechaPedido"), fechaPedido));
 	        }
-			if (filtros.getIdSalida()!= null && filtros.getIdSalida()!= 0) {
-	            Integer idSalida = filtros.getIdSalida();
-	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idSalida"), idSalida));
+			if (filtros.getFechaSalida() != null) {
+				LocalDate fechaSalida = filtros.getFechaSalida();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.join("salida").get("fechaSalida"), fechaSalida));
 	        }
 			if (filtros.getCodArticulo()!= null && filtros.getCodArticulo()!= 0) {
 	            Integer codArticulo = filtros.getCodArticulo();
