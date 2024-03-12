@@ -1,7 +1,9 @@
 package com.tfg.inventariado.providerImpl;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -12,22 +14,28 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import com.tfg.inventariado.dto.ArticuloDto;
+import com.tfg.inventariado.dto.LineaDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
+import com.tfg.inventariado.dto.PedidoDto;
 import com.tfg.inventariado.dto.SalidaDto;
 import com.tfg.inventariado.dto.UnidadDto;
 import com.tfg.inventariado.dto.UnidadFilterDto;
+import com.tfg.inventariado.entity.ArticuloEntity;
 import com.tfg.inventariado.entity.AsignacionEntity;
+import com.tfg.inventariado.entity.InventarioEntity;
 import com.tfg.inventariado.entity.UnidadEntity;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.EstadoProvider;
+import com.tfg.inventariado.provider.LineaProvider;
 import com.tfg.inventariado.provider.OficinaProvider;
 import com.tfg.inventariado.provider.PedidoProvider;
 import com.tfg.inventariado.provider.SalidaProvider;
 import com.tfg.inventariado.provider.UnidadProvider;
 import com.tfg.inventariado.repository.AsignacionRepository;
+import com.tfg.inventariado.repository.InventarioRepository;
 import com.tfg.inventariado.repository.UnidadRepository;
 
 @Service
@@ -56,12 +64,15 @@ public class UnidadProviderImpl implements UnidadProvider {
 	
 	@Autowired
 	private SalidaProvider salidaProvider;
-	
-//	@Autowired
-//	private AsignacionProvider asignacionProvider;
-	
+		
 	@Autowired
 	private AsignacionRepository asignacionRepository;
+	
+	@Autowired
+	private InventarioRepository inventarioRepository;
+	
+	@Autowired
+	private LineaProvider lineaProvider;
 	
 	@Override
 	public UnidadDto convertToMapDto(UnidadEntity unidad) {
@@ -125,23 +136,27 @@ public class UnidadProviderImpl implements UnidadProvider {
 	}
 
 	@Override
-	@Transactional
 	public MessageResponseDto<String> editUnidad(UnidadDto unidad, Integer id) {
-		Optional<UnidadEntity> optionalUnidad = unidadRepository.findById(id);
-		if(optionalUnidad.isPresent()) {
-			
-			UnidadEntity unidadToUpdate = optionalUnidad.get();
-			
-			MessageResponseDto<String> msg = this.actualizarCampos(unidadToUpdate, unidad);
-			if(!msg.isSuccess()) {
+		try {
+			Optional<UnidadEntity> optionalUnidad = unidadRepository.findById(id);
+			if(optionalUnidad.isPresent()) {
+				
+				UnidadEntity unidadToUpdate = optionalUnidad.get();
+				
+				MessageResponseDto<String> msg = this.actualizarCampos(unidadToUpdate, unidad);
+				if(!msg.isSuccess()) {
+					return msg;
+				}
+				
+				unidadRepository.save(unidadToUpdate);
+				
 				return msg;
+				
+			}else {
+				return MessageResponseDto.fail("La unidad que se desea editar no existe");
 			}
-			unidadRepository.save(unidadToUpdate);
-			
-			return msg;
-			
-		}else {
-			return MessageResponseDto.fail("La unidad que se desea editar no existe");
+		} catch (Exception e) {
+			return MessageResponseDto.fail("Error: " + e.getMessage());
 		}
 	}
 	
@@ -182,15 +197,14 @@ public class UnidadProviderImpl implements UnidadProvider {
 		}
 		if(unidadToUpdate.getIdSalida()!= null && this.salidaProvider.salidaExisteByID(unidadToUpdate.getIdSalida())) {
 			MessageResponseDto<SalidaDto> salida = this.salidaProvider.getSalidaById(unidadToUpdate.getIdSalida());
-			if( salida.getMessage().getIdOficina() != unidad.getIdOficina()) {
+			if( salida.isSuccess() && salida.getMessage().getIdOficina() != unidad.getIdOficina()) {
 				return MessageResponseDto.fail("La salida no es de la misma oficina que la unidad");
-
 			}
-			if(salida.getMessage().getCodArticulo() != unidad.getCodArticulo()) {
+			if( salida.isSuccess() && salida.getMessage().getCodArticulo() != unidad.getCodArticulo()) {
 				return MessageResponseDto.fail("La salida no es del mismo tipo de articulos que la unidad");
 
 			}
-			if(salida.getMessage().getNumUnidades() <= unidadRepository.countBySalidaId(unidadToUpdate.getIdSalida())) {
+			if( salida.isSuccess() && salida.getMessage().getNumUnidades() <= unidadRepository.countBySalidaId(unidadToUpdate.getIdSalida())) {
 				return MessageResponseDto.fail("La salida no admite más unidades");
 			}
 			unidad.setIdSalida(unidadToUpdate.getIdSalida());
@@ -343,4 +357,73 @@ public class UnidadProviderImpl implements UnidadProvider {
 		return MessageResponseListDto.success(listaDto, page, size,(int) unidadRepository.count(spec));
 	}
 
+	@Override
+	public List<ArticuloDto> listaArticulosDisponiblesEnInventarioParaRegistrarUnidadesByOficina(Integer idOficina) {
+		// Contar unidades por cada artículo para la oficina dada
+		List<UnidadEntity> unidades = unidadRepository.findByIdOficina(idOficina);
+		Map<Integer, Long> unidadesPorArticulo = unidades.stream().collect(Collectors.groupingBy(UnidadEntity::getCodArticulo, Collectors.counting()));
+
+        // Obtener las entidades de inventario para la misma oficina
+		List<InventarioEntity> inventario = inventarioRepository.findByIdOficina(idOficina);
+
+		List<ArticuloEntity> listArticulos = new ArrayList<ArticuloEntity>();
+		
+		for (InventarioEntity inventarioEntity : inventario) {
+            Integer codArticulo = inventarioEntity.getCodArticulo();
+            if (unidadesPorArticulo.containsKey(codArticulo)) {
+                Long cantidadUnidades = unidadesPorArticulo.get(codArticulo);
+                if (inventarioEntity.getStock() > cantidadUnidades.intValue()) {
+                	listArticulos.add(inventarioEntity.getArticulo());
+                }
+            } else {
+                listArticulos.add(inventarioEntity.getArticulo());
+            }
+        }
+		
+		List<ArticuloDto> listaDto = listArticulos.stream().map(this.articuloProvider::convertToMapDto).collect(Collectors.toList());
+
+		return listaDto;
+	}
+	
+	@Override
+	public MessageResponseDto<List<PedidoDto>> pedidosDisponiblesByOficinaAndArticulo(Integer idOficina, Integer codArticulo){
+		// Contar el número de unidades por cada numeroPedido que cumplan con los criterios
+        List<UnidadEntity> unidades = unidadRepository.findByIdOficinaAndCodArticulo(idOficina, codArticulo);
+        unidades.removeIf(unidad -> unidad.getNumeroPedido() == null);
+        Map<Integer, Long> unidadesPorPedido = unidades.stream().collect(Collectors.groupingBy(UnidadEntity::getNumeroPedido, Collectors.counting()));
+
+        MessageResponseDto<List<PedidoDto>> msgPedidosDto = this.pedidoProvider.listPedidoByOficina(idOficina);
+        if(!msgPedidosDto.isSuccess()) {
+			return msgPedidosDto;
+        }
+        
+        List<PedidoDto> pedidosDto = msgPedidosDto.getMessage();
+        pedidosDto.removeIf(pedido -> pedido.getFechaRecepcion() == null);
+        
+        List<LineaDto> lineasDto = new ArrayList<LineaDto>();
+        
+        for (PedidoDto pedido : pedidosDto) {
+        	lineasDto.addAll( this.lineaProvider.listLineasByPedido(pedido.getNumeroPedido()).getMessage());
+        }
+        
+        Map<Integer, Integer> mapaSumaUnidadesPorPedido = lineasDto.stream().collect(Collectors.groupingBy(LineaDto::getNumeroPedido,Collectors.summingInt(LineaDto::getNumeroUnidades)));
+      
+        List<PedidoDto> pedidosMostrar = new ArrayList<PedidoDto>();
+        
+        for(Integer codPed : mapaSumaUnidadesPorPedido.keySet()) {
+        	Long valor = unidadesPorPedido.get(codPed);
+        	
+        	if (unidadesPorPedido.containsKey(codPed)) {
+                Long cantidadUnidades = unidadesPorPedido.get(codPed);
+                if (valor > cantidadUnidades.intValue()) {
+                	pedidosMostrar.add(this.pedidoProvider.getPedidoById(codPed).getMessage());
+                }
+            } else {
+            	pedidosMostrar.add(this.pedidoProvider.getPedidoById(codPed).getMessage());
+            }
+        }
+        
+		return MessageResponseDto.success(pedidosMostrar);
+ 
+	}
 }

@@ -28,4 +28,6 @@ public interface UnidadRepository  extends JpaRepository<UnidadEntity, Integer> 
 	
 	@Query("SELECT COUNT(u) FROM UnidadEntity u WHERE u.idSalida = :idSalida")
     long countBySalidaId(@Param("idSalida") Integer idSalida);
+	
+	List<UnidadEntity> findByIdOficinaAndCodArticulo(Integer idOficina, Integer codArticulo);
 }

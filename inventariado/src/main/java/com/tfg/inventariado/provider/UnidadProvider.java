@@ -2,8 +2,10 @@ package com.tfg.inventariado.provider;
 
 import java.util.List;
 
+import com.tfg.inventariado.dto.ArticuloDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
+import com.tfg.inventariado.dto.PedidoDto;
 import com.tfg.inventariado.dto.UnidadDto;
 import com.tfg.inventariado.dto.UnidadFilterDto;
 import com.tfg.inventariado.entity.UnidadEntity;
@@ -30,4 +32,7 @@ public interface UnidadProvider {
 	boolean unidadExisteByID(Integer id);
 	
 	MessageResponseListDto<List<UnidadDto>> listAllUnidadesSkipLimit(Integer page, Integer size, UnidadFilterDto filtros);
+	List<ArticuloDto> listaArticulosDisponiblesEnInventarioParaRegistrarUnidadesByOficina(Integer idOficina);
+	MessageResponseDto<List<PedidoDto>> pedidosDisponiblesByOficinaAndArticulo(Integer idOficina, Integer codArticulo);
+
 }

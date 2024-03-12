@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tfg.inventariado.dto.ArticuloDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
+import com.tfg.inventariado.dto.PedidoDto;
 import com.tfg.inventariado.dto.UnidadDto;
 import com.tfg.inventariado.dto.UnidadFilterDto;
 import com.tfg.inventariado.provider.UnidadProvider;
@@ -168,5 +170,23 @@ public class UnidadController {
 		    @RequestParam(value = "skip", required = false) Integer skip, @RequestBody UnidadFilterDto filtros) {
 		MessageResponseListDto<List<UnidadDto>> listaDto = this.unidadProvider.listAllUnidadesSkipLimit(skip,limit,filtros);
 		return new ResponseEntity<MessageResponseListDto<List<UnidadDto>>>(listaDto, HttpStatus.OK);
+	}
+	
+	@GetMapping("/listArtDiponiblesByOficina")
+	public ResponseEntity<List<ArticuloDto>> listaArticulosDisponiblesEnInventarioParaRegistrarUnidadesByOficina(@RequestParam(value = "idOficina", required = true) Integer idOficina) {
+		List<ArticuloDto> listaDto = this.unidadProvider.listaArticulosDisponiblesEnInventarioParaRegistrarUnidadesByOficina(idOficina);
+		return new ResponseEntity<List<ArticuloDto>>(listaDto, HttpStatus.OK);
+	}
+	
+	@GetMapping("/listPedidosDispParaUdsByOficinaAndArt")
+	public ResponseEntity<MessageResponseDto<List<PedidoDto>>> pedidosDisponiblesByOficinaAndArticulo(@RequestParam(value = "idOficina", required = true) Integer idOficina,@RequestParam(value = "codArticulo", required = true) Integer codArticulo) {
+		MessageResponseDto<List<PedidoDto>> messageResponse = this.unidadProvider.pedidosDisponiblesByOficinaAndArticulo(idOficina,codArticulo);
+
+		if (messageResponse.isSuccess()) {
+			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(MessageResponseDto.fail(messageResponse.getError()));
+		}
 	}
 }
