@@ -96,7 +96,7 @@ public class UnidadProviderImpl implements UnidadProvider {
 			return MessageResponseDto.fail("El código interno es obligatorio");
 		}
 		if(unidadRepository.existsById(unidad.getCodigoInterno())){
-			return MessageResponseDto.fail("La unidad ya existe");
+			return MessageResponseDto.fail("Ya existe una unidad con ese código interno");
 		}
 		if(unidad.getCodEstado()==null || unidad.getCodEstado().isEmpty()) {
 			return MessageResponseDto.fail("El estado es obligatorio");
