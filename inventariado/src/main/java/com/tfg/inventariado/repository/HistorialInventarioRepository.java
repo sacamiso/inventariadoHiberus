@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,5 +18,7 @@ public interface HistorialInventarioRepository extends JpaRepository<HistorialIn
 	List<HistorialInventarioEntity> findByCodArticulo(int codArt);
 	
 	Page<HistorialInventarioEntity> findAll(Pageable pageable);
+	Page<HistorialInventarioEntity> findAll(Specification<HistorialInventarioEntity> spec, Pageable pageable);
+	long count(Specification<HistorialInventarioEntity> spec);
 	long count();
 }

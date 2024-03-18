@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tfg.inventariado.dto.HistorialInventarioDto;
+import com.tfg.inventariado.dto.HistorialInventarioFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.provider.HistorialInventarioProvider;
@@ -50,10 +51,10 @@ public class HistorialInventarioController {
 		return new ResponseEntity<List<HistorialInventarioDto>>(listaDto, HttpStatus.OK);
 	}
 	
-	@GetMapping("/listAllPag")
+	@PostMapping("/listAllPag")
 	public ResponseEntity<MessageResponseListDto<List<HistorialInventarioDto>>> listarHitorialPag(@RequestParam(value = "limit", required = false) Integer limit,
-		    @RequestParam(value = "skip", required = false) Integer skip) {
-		MessageResponseListDto<List<HistorialInventarioDto>> listaDto = this.historialProvider.listAllHistorialSkipLimit(skip,limit);
+		    @RequestParam(value = "skip", required = false) Integer skip, @RequestBody HistorialInventarioFilterDto filtros) {
+		MessageResponseListDto<List<HistorialInventarioDto>> listaDto = this.historialProvider.listAllHistorialSkipLimit(skip,limit,filtros);
 		return new ResponseEntity<MessageResponseListDto<List<HistorialInventarioDto>>>(listaDto, HttpStatus.OK);
 	}
 	

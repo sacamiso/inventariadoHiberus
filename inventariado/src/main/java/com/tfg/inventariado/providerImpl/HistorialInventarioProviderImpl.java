@@ -1,6 +1,8 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -10,10 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tfg.inventariado.dto.HistorialInventarioDto;
+import com.tfg.inventariado.dto.HistorialInventarioFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.HistorialInventarioEntity;
@@ -152,14 +156,41 @@ public class HistorialInventarioProviderImpl implements HistorialInventarioProvi
 	}
 
 	@Override
-	public MessageResponseListDto<List<HistorialInventarioDto>> listAllHistorialSkipLimit(Integer page, Integer size) {
+	public MessageResponseListDto<List<HistorialInventarioDto>> listAllHistorialSkipLimit(Integer page, Integer size, HistorialInventarioFilterDto filtros) {
+		Specification<HistorialInventarioEntity> spec = Specification.where(null);
+		
+		if (filtros != null) {
+			if (filtros.getIdOficina()!= null && filtros.getIdOficina()!= 0) {
+	            Integer idOficina = filtros.getIdOficina();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOficina));
+	        }
+			if (filtros.getCodArticulo()!= null && filtros.getCodArticulo()!= 0) {
+	            Integer codArticulo = filtros.getCodArticulo();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codArticulo"), codArticulo));
+	        }
+			if (filtros.getStockMin() != null) {
+	            Integer stockMin = filtros.getStockMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("stock"), stockMin));
+	        }
+	        if (filtros.getStockMax() != null) {
+	            Integer stockMax = filtros.getStockMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("stock"), stockMax));
+	        }
+	        if (filtros.getFecha() != null) {
+	        	LocalDate fecha = filtros.getFecha();
+	            LocalDateTime fechaInicio = fecha.atStartOfDay();
+	            LocalDateTime fechaFin = fecha.atTime(LocalTime.MAX);
+	            spec = spec.and((root, query, cb) -> cb.between(root.get("fecha"), fechaInicio, fechaFin)); 
+	        }
+		}
+		
 		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fecha"));
-		Page<HistorialInventarioEntity> pageableHistorial = historialRepository.findAll(pageable);
+		Page<HistorialInventarioEntity> pageableHistorial = historialRepository.findAll(spec,pageable);
 		
 		List<HistorialInventarioEntity> listaEntity = pageableHistorial.getContent();
 		List<HistorialInventarioDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 		
-		return MessageResponseListDto.success(listaDto, page, size,(int) historialRepository.count());
+		return MessageResponseListDto.success(listaDto, page, size,(int) historialRepository.count(spec));
 	}
 
 }
