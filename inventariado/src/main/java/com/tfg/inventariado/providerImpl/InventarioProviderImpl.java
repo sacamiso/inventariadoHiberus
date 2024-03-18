@@ -10,12 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tfg.inventariado.dto.ArticuloDto;
 import com.tfg.inventariado.dto.HistorialInventarioDto;
 import com.tfg.inventariado.dto.InventarioDto;
+import com.tfg.inventariado.dto.InventarioFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.OficinaDto;
@@ -164,14 +166,35 @@ public class InventarioProviderImpl implements InventarioProvider{
 	}
 
 	@Override
-	public MessageResponseListDto<List<InventarioDto>> listAllInventariosSkipLimit(Integer page, Integer size) {
+	public MessageResponseListDto<List<InventarioDto>> listAllInventariosSkipLimit(Integer page, Integer size, InventarioFilterDto filtros) {
+		Specification<InventarioEntity> spec = Specification.where(null);
+		
+		if (filtros != null) {
+			if (filtros.getIdOficina()!= null && filtros.getIdOficina()!= 0) {
+	            Integer idOficina = filtros.getIdOficina();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOficina));
+	        }
+			if (filtros.getCodArticulo()!= null && filtros.getCodArticulo()!= 0) {
+	            Integer codArticulo = filtros.getCodArticulo();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codArticulo"), codArticulo));
+	        }
+			if (filtros.getStockMin() != null) {
+	            Integer stockMin = filtros.getStockMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("stock"), stockMin));
+	        }
+	        if (filtros.getStockMax() != null) {
+	            Integer stockMax = filtros.getStockMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("stock"), stockMax));
+	        }
+		}
+		
 		PageRequest pageable = PageRequest.of(page, size, Sort.by("idOficina", "codArticulo"));
-		Page<InventarioEntity> pageableInventario = inventarioRepository.findAll(pageable);
+		Page<InventarioEntity> pageableInventario = inventarioRepository.findAll(spec, pageable);
 		
 		List<InventarioEntity> listaEntity = pageableInventario.getContent();
 		List<InventarioDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 		
-		return MessageResponseListDto.success(listaDto, page, size,(int) inventarioRepository.count());
+		return MessageResponseListDto.success(listaDto, page, size,(int) inventarioRepository.count(spec));
 	}
 
 }

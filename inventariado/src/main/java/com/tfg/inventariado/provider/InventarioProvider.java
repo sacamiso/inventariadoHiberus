@@ -3,6 +3,7 @@ package com.tfg.inventariado.provider;
 import java.util.List;
 
 import com.tfg.inventariado.dto.InventarioDto;
+import com.tfg.inventariado.dto.InventarioFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.InventarioEntity;
@@ -21,5 +22,5 @@ public interface InventarioProvider {
 	
 	boolean inventarioExisteByID(Integer idOf, Integer idArt);
 	
-	MessageResponseListDto<List<InventarioDto>> listAllInventariosSkipLimit(Integer page, Integer size);
+	MessageResponseListDto<List<InventarioDto>> listAllInventariosSkipLimit(Integer page, Integer size, InventarioFilterDto filtros);
 }

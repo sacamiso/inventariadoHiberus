@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,6 +16,7 @@ public interface InventarioRepository extends JpaRepository<InventarioEntity, In
 	List<InventarioEntity> findByIdOficina(int idOficina);
 	List<InventarioEntity> findByCodArticulo(int codArt);
 	
-	Page<InventarioEntity> findAll(Pageable pageable);
+	Page<InventarioEntity> findAll(Specification<InventarioEntity> spec, Pageable pageable);
+	long count(Specification<InventarioEntity> spec);
 	long count();
 }

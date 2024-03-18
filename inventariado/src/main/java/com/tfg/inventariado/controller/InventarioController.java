@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tfg.inventariado.dto.InventarioDto;
+import com.tfg.inventariado.dto.InventarioFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.provider.InventarioProvider;
@@ -43,10 +44,10 @@ public class InventarioController {
 		}
 	}
 	
-	@GetMapping("/listAllPag")
+	@PostMapping("/listAllPag")
 	public ResponseEntity<MessageResponseListDto<List<InventarioDto>>> listarInventarioPag(@RequestParam(value = "limit", required = false) Integer limit,
-		    @RequestParam(value = "skip", required = false) Integer skip) {
-		MessageResponseListDto<List<InventarioDto>> listaDto = this.inventarioProvider.listAllInventariosSkipLimit(skip,limit);
+		    @RequestParam(value = "skip", required = false) Integer skip, @RequestBody InventarioFilterDto filtros) {
+		MessageResponseListDto<List<InventarioDto>> listaDto = this.inventarioProvider.listAllInventariosSkipLimit(skip,limit,filtros);
 		return new ResponseEntity<MessageResponseListDto<List<InventarioDto>>>(listaDto, HttpStatus.OK);
 	}
 	
