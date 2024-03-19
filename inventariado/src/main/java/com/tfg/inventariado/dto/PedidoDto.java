@@ -27,7 +27,7 @@ public class PedidoDto {
 	private String condicionPago;
 	private String medioPago;
 	
-	private double costeUnitario;
+	private Double costeUnitario;
 	private Integer numeroUnidades;
 	
 	private EmpleadoDto empleado;

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +21,9 @@ import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.OficinaDto;
 import com.tfg.inventariado.dto.PedidoDto;
+import com.tfg.inventariado.dto.PedidoFilterDto;
 import com.tfg.inventariado.entity.PedidoEntity;
+import com.tfg.inventariado.entity.PedidoVWEntity;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.CondicionPagoProvider;
 import com.tfg.inventariado.provider.EmpleadoProvider;
@@ -31,12 +34,16 @@ import com.tfg.inventariado.provider.OficinaProvider;
 import com.tfg.inventariado.provider.PedidoProvider;
 import com.tfg.inventariado.provider.ProveedorProvider;
 import com.tfg.inventariado.repository.PedidoRepository;
+import com.tfg.inventariado.repository.PedidoVWRepository;
 
 @Service
 public class PedidoProviderImpl implements PedidoProvider {
 
 	@Autowired
 	private PedidoRepository pedidoRepository;
+	
+	@Autowired
+	private PedidoVWRepository pedidoVistaRepository;
 	
 	@Autowired
 	private ModelMapper modelMapper;
@@ -74,6 +81,17 @@ public class PedidoProviderImpl implements PedidoProvider {
 	public PedidoEntity convertToMapEntity(PedidoDto pedido) {
 		return modelMapper.map(pedido, PedidoEntity.class);
 	}
+	
+	@Override
+	public PedidoDto convertToMapDtoVista(PedidoVWEntity pedido) {
+		return modelMapper.map(pedido, PedidoDto.class);
+	}
+
+	@Override
+	public PedidoVWEntity convertToMapEntityVista(PedidoDto pedido) {
+		return modelMapper.map(pedido, PedidoVWEntity.class);
+	}
+
 
 	@Override
 	public List<PedidoDto> listAllPedidos() {
@@ -94,7 +112,7 @@ public class PedidoProviderImpl implements PedidoProvider {
 				if(numeroUnidades!=0) {
 					pedidoDto.setCosteUnitario(costeTotal/numeroUnidades);
 				}else {
-					pedidoDto.setCosteUnitario(0);
+					pedidoDto.setCosteUnitario(0.0);
 				}	
 			}
 		}
@@ -255,7 +273,7 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 				if(numeroUnidades!=0) {
 					pedidoDto.setCosteUnitario(costeTotal/numeroUnidades);
 				}else {
-					pedidoDto.setCosteUnitario(0);
+					pedidoDto.setCosteUnitario(0.0);
 				}
 				
 			}
@@ -296,33 +314,95 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 	}
 
 	@Override
-	public MessageResponseListDto<List<PedidoDto>> listAllPedidosSkipLimit(Integer page, Integer size) {
-		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaPedido"));
-		Page<PedidoEntity> pageablePedido = pedidoRepository.findAll(pageable);
+	public MessageResponseListDto<List<PedidoDto>> listAllPedidosSkipLimit(Integer page, Integer size, PedidoFilterDto filtros) {
+		Specification<PedidoVWEntity> spec = Specification.where(null);
 		
-		List<PedidoEntity> listaEntity = pageablePedido.getContent();
-		List<PedidoDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
-		MessageResponseDto<List<LineaDto>> lineas;
-		for (PedidoDto pedidoDto : listaDto) {
-			lineas = lineaProvider.listLineasByPedido(pedidoDto.getNumeroPedido());
-			if(lineas.isSuccess()) {
-				int numeroUnidades = 0;
-				double costeTotal = 0;
-				for(LineaDto l : lineas.getMessage()){
-					numeroUnidades = numeroUnidades + l.getNumeroUnidades();
-					costeTotal = costeTotal + l.getPrecioLinea();
-				}
-				
-				pedidoDto.setNumeroUnidades(numeroUnidades);
-				if(numeroUnidades!=0) {
-					pedidoDto.setCosteUnitario(costeTotal/numeroUnidades);
-				}else {
-					pedidoDto.setCosteUnitario(0);
-				}	
+		if (filtros != null) {
+			if (filtros.getFechaPedido() != null) {
+				LocalDate fechaPedido = filtros.getFechaPedido();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("fechaPedido"), fechaPedido));
+	        }
+			if (filtros.getIvaPedidoMin() != null) {
+				Integer ivaMin = filtros.getIvaPedidoMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("ivaPedido"), ivaMin));
+			}
+			if (filtros.getIvaPedidoMax() != null) {
+				Integer ivaMax = filtros.getIvaPedidoMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("ivaPedido"), ivaMax));
+			}
+			if (filtros.getCosteTotalMin() != null) {
+				Integer cosTotMin = filtros.getCosteTotalMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costeTotal"), cosTotMin));
+			}
+			if (filtros.getCosteTotalMax() != null) {
+				Integer cosTotMax = filtros.getCosteTotalMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("costeTotal"), cosTotMax));
+			}
+			if (filtros.getIdEmpleado()!= null && filtros.getIdEmpleado()!= 0) {
+	            Integer idEmpleado = filtros.getIdEmpleado();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idEmpleado"), idEmpleado));
+	        }
+			if (filtros.getPlazoEntregaMin() != null) {
+				Integer plazoMin = filtros.getPlazoEntregaMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("plazoEntrega"), plazoMin));
+			}
+			if (filtros.getPlazoEntregaMax() != null) {
+				Integer plazoMax = filtros.getPlazoEntregaMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("plazoEntrega"), plazoMax));
+			}
+			if (filtros.getCostesEnvioMin() != null) {
+				Integer costesMin = filtros.getCostesEnvioMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costesEnvio"), costesMin));
+			}
+			if (filtros.getCostesEnvioMax() != null) {
+				Integer costesMax = filtros.getCostesEnvioMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("costesEnvio"), costesMax));
+			}
+			if (filtros.getIdProveedor()!= null && filtros.getIdProveedor()!= 0) {
+	            Integer idProveedor = filtros.getIdProveedor();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idProveedor"), idProveedor));
+	        }
+			if (filtros.getIdOficina()!= null && filtros.getIdOficina()!= 0) {
+	            Integer idOficina = filtros.getIdOficina();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOficina));
+	        }
+			if (filtros.getFechaRecepcion() != null) {
+				LocalDate fechaRecepcion = filtros.getFechaRecepcion();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("fechaRecepcion"), fechaRecepcion));
+	        }
+			if (filtros.getCodigoCondicionPago()!= null && !filtros.getCodigoCondicionPago().isEmpty()) {
+	            String codigoCondicion = filtros.getCodigoCondicionPago();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("condicionPago"), codigoCondicion));
+	        }
+			if (filtros.getCodigoMedioPago()!= null && !filtros.getCodigoMedioPago().isEmpty()) {
+	            String codigoMedio = filtros.getCodigoMedioPago();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("medioPago"), codigoMedio));
+	        }
+			if (filtros.getRecibido() != null) {
+	            if (filtros.getRecibido()) {
+	                spec = spec.and((root, query, cb) -> cb.isNotNull(root.get("fechaRecepcion")));
+	            } else {
+	                spec = spec.and((root, query, cb) -> cb.isNull(root.get("fechaRecepcion")));
+	            }
+	        }
+			if (filtros.getCosteUnitarioMin() != null && filtros.getCosteUnitarioMin() != 0) {
+				Double costeUnMin = filtros.getCosteUnitarioMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costeUnitario"), costeUnMin));
+			}
+			if (filtros.getCosteUnitarioMax() != null && filtros.getCosteUnitarioMax() != 0) {
+				Double costeUnMax = filtros.getCosteUnitarioMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("costeUnitario"), costeUnMax));
 			}
 		}
 		
-		return MessageResponseListDto.success(listaDto, page, size,(int) pedidoRepository.count());
+		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaPedido"));
+		Page<PedidoVWEntity> pageablePedido = pedidoVistaRepository.findAll(spec,pageable);
+		
+		List<PedidoVWEntity> listaEntity = pageablePedido.getContent();
+		List<PedidoDto> listaDto = listaEntity.stream().map(this::convertToMapDtoVista).collect(Collectors.toList());
+		
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) pedidoVistaRepository.count(spec));
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.PedidoDto;
+import com.tfg.inventariado.dto.PedidoFilterDto;
 import com.tfg.inventariado.provider.PedidoProvider;
 
 @RestController
@@ -49,10 +50,10 @@ public class PedidoController {
 		return new ResponseEntity<List<PedidoDto>>(listaDto, HttpStatus.OK);
 	}
 	
-	@GetMapping("/listAllPag")
+	@PostMapping("/listAllPag")
 	public ResponseEntity<MessageResponseListDto<List<PedidoDto>>> listarPedidosPag(@RequestParam(value = "limit", required = false) Integer limit,
-		    @RequestParam(value = "skip", required = false) Integer skip) {
-		MessageResponseListDto<List<PedidoDto>> listaDto = this.pedidoProvider.listAllPedidosSkipLimit(skip,limit);
+		    @RequestParam(value = "skip", required = false) Integer skip, @RequestBody PedidoFilterDto filtros) {
+		MessageResponseListDto<List<PedidoDto>> listaDto = this.pedidoProvider.listAllPedidosSkipLimit(skip,limit, filtros);
 		return new ResponseEntity<MessageResponseListDto<List<PedidoDto>>>(listaDto, HttpStatus.OK);
 	}
 	

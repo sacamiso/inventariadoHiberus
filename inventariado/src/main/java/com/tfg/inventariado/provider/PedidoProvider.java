@@ -5,12 +5,16 @@ import java.util.List;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.PedidoDto;
+import com.tfg.inventariado.dto.PedidoFilterDto;
 import com.tfg.inventariado.entity.PedidoEntity;
+import com.tfg.inventariado.entity.PedidoVWEntity;
 
 public interface PedidoProvider {
 
 	PedidoDto convertToMapDto(PedidoEntity pedido);
 	PedidoEntity convertToMapEntity(PedidoDto pedido);
+	PedidoDto convertToMapDtoVista(PedidoVWEntity pedido);
+	PedidoVWEntity convertToMapEntityVista(PedidoDto pedido);
 	List<PedidoDto> listAllPedidos();
 	MessageResponseDto<String> addPedido(PedidoDto pedido);
 	MessageResponseDto<String> editPedido(PedidoDto pedido, Integer id);
@@ -21,7 +25,7 @@ public interface PedidoProvider {
 	
 	boolean pedidoExisteByID(Integer id);
 	
-	MessageResponseListDto<List<PedidoDto>> listAllPedidosSkipLimit(Integer page, Integer size);
+	MessageResponseListDto<List<PedidoDto>> listAllPedidosSkipLimit(Integer page, Integer size, PedidoFilterDto filtros);
 	MessageResponseDto<String> marcarRecibido(Integer id);
 	
 }
