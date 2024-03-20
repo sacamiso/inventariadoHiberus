@@ -5,6 +5,7 @@ import java.util.List;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.StockSeguridadDto;
+import com.tfg.inventariado.dto.StockSeguridadFilterDto;
 import com.tfg.inventariado.entity.StockSeguridadEntity;
 
 public interface StockSeguridadProvider {
@@ -20,6 +21,6 @@ public interface StockSeguridadProvider {
 	
 	boolean stockSeguridadExisteByID(String cat, String subCat, Integer idOficina);
 	
-	MessageResponseListDto<List<StockSeguridadDto>> listAllStockSeguridadSkipLimit(Integer page, Integer size);
+	MessageResponseListDto<List<StockSeguridadDto>> listAllStockSeguridadSkipLimit(Integer page, Integer size, StockSeguridadFilterDto filtros);
 	MessageResponseDto<String> guardarStockSeguridadOf(List<StockSeguridadDto> seguridad);
 }

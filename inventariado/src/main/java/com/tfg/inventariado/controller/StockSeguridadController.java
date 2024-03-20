@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.StockSeguridadDto;
+import com.tfg.inventariado.dto.StockSeguridadFilterDto;
 import com.tfg.inventariado.provider.StockSeguridadProvider;
 
 @RestController
@@ -56,10 +57,10 @@ public class StockSeguridadController {
 		}
 	}
 	
-	@GetMapping("/listAllPag")
+	@PostMapping("/listAllPag")
 	public ResponseEntity<MessageResponseListDto<List<StockSeguridadDto>>> listarStockPag(@RequestParam(value = "limit", required = false) Integer limit,
-		    @RequestParam(value = "skip", required = false) Integer skip) {
-		MessageResponseListDto<List<StockSeguridadDto>> listaDto = this.seguridadProvider.listAllStockSeguridadSkipLimit(skip,limit);
+		    @RequestParam(value = "skip", required = false) Integer skip, @RequestBody StockSeguridadFilterDto filtros) {
+		MessageResponseListDto<List<StockSeguridadDto>> listaDto = this.seguridadProvider.listAllStockSeguridadSkipLimit(skip,limit,filtros);
 		return new ResponseEntity<MessageResponseListDto<List<StockSeguridadDto>>>(listaDto, HttpStatus.OK);
 	}
 	

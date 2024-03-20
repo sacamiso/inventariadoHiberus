@@ -9,12 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.StockSeguridadDto;
+import com.tfg.inventariado.dto.StockSeguridadFilterDto;
 import com.tfg.inventariado.entity.StockSeguridadEntity;
 import com.tfg.inventariado.entity.StockSeguridadEntityID;
 import com.tfg.inventariado.provider.CategoriaProvider;
@@ -167,14 +169,41 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 	}
 
 	@Override
-	public MessageResponseListDto<List<StockSeguridadDto>> listAllStockSeguridadSkipLimit(Integer page, Integer size) {
+	public MessageResponseListDto<List<StockSeguridadDto>> listAllStockSeguridadSkipLimit(Integer page, Integer size, StockSeguridadFilterDto filtros) {
+		Specification<StockSeguridadEntity> spec = Specification.where(null);
+		if (filtros != null) {
+			if (filtros.getCodCategoria() != null) {
+				String cat = filtros.getCodCategoria();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codCategoria"), cat));
+			}
+			if (filtros.getCodSubcategoria() != null) {
+				String scat = filtros.getCodSubcategoria();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codSubcategoria"), scat));
+			}
+			if (filtros.getIdOficina()!= null && filtros.getIdOficina()!= 0) {
+	            Integer idOficina = filtros.getIdOficina();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOficina));
+	        }
+			if (filtros.getCantidad() != null) {
+				Integer cant = filtros.getCantidad();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("cantidad"), cant));
+			}
+			if (filtros.getPlazoMin() != null) {
+				Integer ptMin = filtros.getPlazoMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("plazoEntregaMedio"), ptMin));
+			}
+			if (filtros.getPlazoMax() != null) {
+				Integer pMax = filtros.getPlazoMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("plazoEntregaMedio"), pMax));
+			}
+		}
 		PageRequest pageable = PageRequest.of(page, size, Sort.by("idOficina"));
-		Page<StockSeguridadEntity> pageableSS = stockSeguridadRepository.findAll(pageable);
+		Page<StockSeguridadEntity> pageableSS = stockSeguridadRepository.findAll(spec, pageable);
 		
 		List<StockSeguridadEntity> listaEntity = pageableSS.getContent();
 		List<StockSeguridadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 		
-		return MessageResponseListDto.success(listaDto, page, size,(int) stockSeguridadRepository.count());
+		return MessageResponseListDto.success(listaDto, page, size,(int) stockSeguridadRepository.count(spec));
 	}
 
 	@Override
