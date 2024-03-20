@@ -391,7 +391,10 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 			}
 			if (filtros.getCosteUnitarioMax() != null && filtros.getCosteUnitarioMax() != 0) {
 				Double costeUnMax = filtros.getCosteUnitarioMax();
-	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("costeUnitario"), costeUnMax));
+				spec = spec.and((root, query, cb) -> cb.or(
+				        cb.isNull(root.get("costeUnitario")),
+				        cb.lessThanOrEqualTo(root.get("costeUnitario"), costeUnMax)
+				    ));
 			}
 		}
 		
