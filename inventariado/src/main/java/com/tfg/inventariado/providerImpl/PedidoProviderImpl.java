@@ -323,19 +323,19 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 	            spec = spec.and((root, query, cb) -> cb.equal(root.get("fechaPedido"), fechaPedido));
 	        }
 			if (filtros.getIvaPedidoMin() != null) {
-				Integer ivaMin = filtros.getIvaPedidoMin();
+				Double ivaMin = filtros.getIvaPedidoMin();
 	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("ivaPedido"), ivaMin));
 			}
 			if (filtros.getIvaPedidoMax() != null) {
-				Integer ivaMax = filtros.getIvaPedidoMax();
+				Double ivaMax = filtros.getIvaPedidoMax();
 	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("ivaPedido"), ivaMax));
 			}
 			if (filtros.getCosteTotalMin() != null) {
-				Integer cosTotMin = filtros.getCosteTotalMin();
+				Double cosTotMin = filtros.getCosteTotalMin();
 	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costeTotal"), cosTotMin));
 			}
 			if (filtros.getCosteTotalMax() != null) {
-				Integer cosTotMax = filtros.getCosteTotalMax();
+				Double cosTotMax = filtros.getCosteTotalMax();
 	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("costeTotal"), cosTotMax));
 			}
 			if (filtros.getIdEmpleado()!= null && filtros.getIdEmpleado()!= 0) {
@@ -351,11 +351,11 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("plazoEntrega"), plazoMax));
 			}
 			if (filtros.getCostesEnvioMin() != null) {
-				Integer costesMin = filtros.getCostesEnvioMin();
+				Double costesMin = filtros.getCostesEnvioMin();
 	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costesEnvio"), costesMin));
 			}
 			if (filtros.getCostesEnvioMax() != null) {
-				Integer costesMax = filtros.getCostesEnvioMax();
+				Double costesMax = filtros.getCostesEnvioMax();
 	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("costesEnvio"), costesMax));
 			}
 			if (filtros.getIdProveedor()!= null && filtros.getIdProveedor()!= 0) {

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.OficinaDto;
 import com.tfg.inventariado.dto.SalidaDto;
+import com.tfg.inventariado.dto.SalidaFilterDto;
 import com.tfg.inventariado.entity.SalidaEntity;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.InventarioProvider;
@@ -211,14 +213,53 @@ public class SalidaProviderImpl implements SalidaProvider {
 	}
 
 	@Override
-	public MessageResponseListDto<List<SalidaDto>> listAllSalidasSkipLimit(Integer page, Integer size) {
+	public MessageResponseListDto<List<SalidaDto>> listAllSalidasSkipLimit(Integer page, Integer size, SalidaFilterDto filtros) {
+		Specification<SalidaEntity> spec = Specification.where(null);
+		if (filtros != null) {
+			if (filtros.getNumeroUnidades() != null) {
+				Integer numU = filtros.getNumeroUnidades();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("numUnidades"), numU));
+			}
+			if (filtros.getCosteTotalMin() != null) {
+				Double cosTotMin = filtros.getCosteTotalMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costeTotal"), cosTotMin));
+			}
+			if (filtros.getCosteTotalMax() != null) {
+				Double cosTotMax = filtros.getCosteTotalMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("costeTotal"), cosTotMax));
+			}
+			if (filtros.getCosteUnitarioMin() != null && filtros.getCosteUnitarioMin() != 0) {
+				Double costeUnMin = filtros.getCosteUnitarioMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costeUnitario"), costeUnMin));
+			}
+			if (filtros.getCosteUnitarioMax() != null && filtros.getCosteUnitarioMax() != 0) {
+				Double costeUnMax = filtros.getCosteUnitarioMax();
+				spec = spec.and((root, query, cb) -> cb.or(
+				        cb.isNull(root.get("costeUnitario")),
+				        cb.lessThanOrEqualTo(root.get("costeUnitario"), costeUnMax)
+				    ));
+			}
+			if (filtros.getFechaSalida() != null) {
+				LocalDate fecha = filtros.getFechaSalida();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("fechaSalida"), fecha));
+	        }
+			if (filtros.getIdOficina()!= null && filtros.getIdOficina()!= 0) {
+	            Integer idOficina = filtros.getIdOficina();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOficina));
+	        }
+			if (filtros.getCodArticulo()!= null && filtros.getCodArticulo()!= 0) {
+	            Integer codArticulo = filtros.getCodArticulo();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codArticulo"), codArticulo));
+	        }
+		}
+		
 		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaSalida"));
-		Page<SalidaEntity> pageablesalida = saldiaRepository.findAll(pageable);
+		Page<SalidaEntity> pageablesalida = saldiaRepository.findAll(spec,pageable);
 		
 		List<SalidaEntity> listaEntity = pageablesalida.getContent();
 		List<SalidaDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 		
-		return MessageResponseListDto.success(listaDto, page, size,(int) saldiaRepository.count());
+		return MessageResponseListDto.success(listaDto, page, size,(int) saldiaRepository.count(spec));
 		
 	}
 

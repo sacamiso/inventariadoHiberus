@@ -13,15 +13,15 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode
 public class PedidoFilterDto {
 	private LocalDate fechaPedido;
-	private Integer ivaPedidoMin;
-	private Integer ivaPedidoMax;
-	private Integer costeTotalMin;
-	private Integer costeTotalMax;
+	private Double ivaPedidoMin;
+	private Double ivaPedidoMax;
+	private Double costeTotalMin;
+	private Double costeTotalMax;
 	private Integer idEmpleado;
 	private Integer plazoEntregaMin;
 	private Integer plazoEntregaMax;
-	private Integer costesEnvioMin;
-	private Integer costesEnvioMax;
+	private Double costesEnvioMin;
+	private Double costesEnvioMax;
 	private Integer idProveedor;
 	private Integer idOficina;
 	private LocalDate fechaRecepcion;
