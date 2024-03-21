@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tfg.inventariado.dto.AvisoDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.StockSeguridadDto;
@@ -114,5 +115,11 @@ public class StockSeguridadController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(MessageResponseDto.fail(listaDto.getError()));
 		}
+	}
+	
+	@GetMapping("/getAvisos")
+	public ResponseEntity<MessageResponseDto<List<AvisoDto>>> getAvisos() {
+		MessageResponseDto<List<AvisoDto>> listaDto = this.seguridadProvider.validarStockSeguridadAvisos();
+		return new ResponseEntity<MessageResponseDto<List<AvisoDto>>>(listaDto, HttpStatus.OK);
 	}
 }

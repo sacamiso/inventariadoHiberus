@@ -17,6 +17,8 @@ public interface InventarioRepository extends JpaRepository<InventarioEntity, In
 	List<InventarioEntity> findByCodArticulo(int codArt);
 	
 	Page<InventarioEntity> findAll(Specification<InventarioEntity> spec, Pageable pageable);
+	List<InventarioEntity> findAll(Specification<InventarioEntity> spec);
+
 	long count(Specification<InventarioEntity> spec);
 	long count();
 }

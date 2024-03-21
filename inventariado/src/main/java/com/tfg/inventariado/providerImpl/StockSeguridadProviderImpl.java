@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -13,16 +14,19 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tfg.inventariado.dto.AvisoDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.StockSeguridadDto;
 import com.tfg.inventariado.dto.StockSeguridadFilterDto;
+import com.tfg.inventariado.entity.InventarioEntity;
 import com.tfg.inventariado.entity.StockSeguridadEntity;
 import com.tfg.inventariado.entity.StockSeguridadEntityID;
 import com.tfg.inventariado.provider.CategoriaProvider;
 import com.tfg.inventariado.provider.OficinaProvider;
 import com.tfg.inventariado.provider.StockSeguridadProvider;
 import com.tfg.inventariado.provider.SubcategoriaProvider;
+import com.tfg.inventariado.repository.InventarioRepository;
 import com.tfg.inventariado.repository.StockSeguridadRepository;
 
 @Service
@@ -34,6 +38,9 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 	@Autowired
 	private StockSeguridadRepository stockSeguridadRepository;
 	
+	@Autowired
+	private InventarioRepository inventarioRepository;
+		
 	@Autowired
 	private OficinaProvider oficinaProvider;
 	
@@ -205,6 +212,42 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		
 		return MessageResponseListDto.success(listaDto, page, size,(int) stockSeguridadRepository.count(spec));
 	}
+	
+	@Override
+	public MessageResponseDto<List<AvisoDto>> validarStockSeguridadAvisos() {
+        
+        try {
+			List<AvisoDto> avisosList = new ArrayList<AvisoDto>();
+
+			List<StockSeguridadEntity> allStockSeguridad = stockSeguridadRepository.findAllOrdered();
+
+			for (StockSeguridadEntity stockSeguridad : allStockSeguridad) {
+			    Specification<InventarioEntity> spec = (root, query, cb) -> {
+			        return cb.and(
+			                cb.equal(root.get("oficina").get("idOficina"), stockSeguridad.getIdOficina()),
+			                cb.equal(root.get("articulo").get("codCategoria"), stockSeguridad.getCodCategoria()),
+			                cb.equal(root.get("articulo").get("codSubcategoria"), stockSeguridad.getCodSubcategoria())
+			        );
+			    };
+
+			    List<InventarioEntity> inventarioList = inventarioRepository.findAll(spec);
+			    int stockSum = inventarioList.stream().mapToInt(InventarioEntity::getStock).sum();
+
+			    AvisoDto avisoAux;
+			    if (stockSum < stockSeguridad.getCantidad()) {
+			    	avisoAux = new AvisoDto(this.oficinaProvider.convertToMapDto(stockSeguridad.getOficina()), this.subcategoriaProvider.getSubcategoriaById(stockSeguridad.getCodCategoria(), stockSeguridad.getCodSubcategoria()).getMessage() ,
+			    			stockSeguridad.getCantidad(), stockSum, (stockSeguridad.getCantidad()-stockSum));
+			    	avisosList.add(avisoAux);
+			    }
+			}
+
+			return MessageResponseDto.success(avisosList);
+		} catch (Exception e) {
+			return MessageResponseDto.fail("Se ha producido un error interno al recuperar los datos" + e.toString());
+		}
+    }
+	
+	
 
 	@Override
 	@Transactional

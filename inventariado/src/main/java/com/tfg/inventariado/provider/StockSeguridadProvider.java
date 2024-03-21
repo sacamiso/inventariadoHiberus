@@ -2,6 +2,7 @@ package com.tfg.inventariado.provider;
 
 import java.util.List;
 
+import com.tfg.inventariado.dto.AvisoDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.StockSeguridadDto;
@@ -23,4 +24,6 @@ public interface StockSeguridadProvider {
 	
 	MessageResponseListDto<List<StockSeguridadDto>> listAllStockSeguridadSkipLimit(Integer page, Integer size, StockSeguridadFilterDto filtros);
 	MessageResponseDto<String> guardarStockSeguridadOf(List<StockSeguridadDto> seguridad);
+	
+	MessageResponseDto<List<AvisoDto>> validarStockSeguridadAvisos();
 }
