@@ -122,4 +122,22 @@ public class StockSeguridadController {
 		MessageResponseDto<List<AvisoDto>> listaDto = this.seguridadProvider.validarStockSeguridadAvisos();
 		return new ResponseEntity<MessageResponseDto<List<AvisoDto>>>(listaDto, HttpStatus.OK);
 	}
+	
+	@GetMapping("/hayAvisos")
+	public ResponseEntity<MessageResponseDto<Boolean>> hayAvisos() {
+		MessageResponseDto<Boolean> response = this.seguridadProvider.hayAvisosPrimeraVez();
+		if(response.isSuccess()) {
+			return ResponseEntity.status(HttpStatus.OK).body(response);
+		}else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(MessageResponseDto.fail(response.getError()));
+		}
+	}
+	
+	@GetMapping("/hayAvisosCron")
+	public ResponseEntity<MessageResponseDto<Boolean>> hayAvisosCron() {
+		MessageResponseDto<Boolean> response = this.seguridadProvider.hayAvisosCron();
+		return ResponseEntity.status(HttpStatus.OK).body(response);
+		
+	}
 }

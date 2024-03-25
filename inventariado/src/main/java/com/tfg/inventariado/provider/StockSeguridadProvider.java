@@ -26,4 +26,6 @@ public interface StockSeguridadProvider {
 	MessageResponseDto<String> guardarStockSeguridadOf(List<StockSeguridadDto> seguridad);
 	
 	MessageResponseDto<List<AvisoDto>> validarStockSeguridadAvisos();
+	MessageResponseDto<Boolean> hayAvisosPrimeraVez();
+	MessageResponseDto<Boolean> hayAvisosCron();
 }

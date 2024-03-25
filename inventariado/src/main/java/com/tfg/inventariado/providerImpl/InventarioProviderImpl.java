@@ -23,17 +23,22 @@ import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.OficinaDto;
 import com.tfg.inventariado.entity.InventarioEntity;
 import com.tfg.inventariado.entity.InventarioEntityID;
+import com.tfg.inventariado.entity.StockSeguridadEntity;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.HistorialInventarioProvider;
 import com.tfg.inventariado.provider.InventarioProvider;
 import com.tfg.inventariado.provider.OficinaProvider;
 import com.tfg.inventariado.repository.InventarioRepository;
+import com.tfg.inventariado.repository.StockSeguridadRepository;
 
 @Service
 public class InventarioProviderImpl implements InventarioProvider{
 
 	@Autowired
 	private ModelMapper modelMapper;
+	
+	@Autowired
+	private StockSeguridadRepository stockSeguridadRepository;
 	
 	@Autowired
 	private InventarioRepository inventarioRepository;
@@ -89,6 +94,9 @@ public class InventarioProviderImpl implements InventarioProvider{
 		}
 		InventarioEntity newInventario = convertToMapEntity(inventario);
 		newInventario = inventarioRepository.save(newInventario);
+		
+		StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
+		
 		return MessageResponseDto.success("Inventario añadido con éxito");
 	}
 
@@ -112,6 +120,8 @@ public class InventarioProviderImpl implements InventarioProvider{
 			this.actualizarCampos(inventarioToUpdate, inventario);
 			
 			inventarioRepository.save(inventarioToUpdate);
+			
+			StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
 			
 			return MessageResponseDto.success("Inventario editado con éxito");
 			
@@ -196,5 +206,31 @@ public class InventarioProviderImpl implements InventarioProvider{
 		
 		return MessageResponseListDto.success(listaDto, page, size,(int) inventarioRepository.count(spec));
 	}
+
+	
+	private boolean compruebaAvisos() {
+        
+		List<StockSeguridadEntity> allStockSeguridad = stockSeguridadRepository.findAllOrdered();
+
+		for (StockSeguridadEntity stockSeguridad : allStockSeguridad) {
+		    Specification<InventarioEntity> spec = (root, query, cb) -> {
+		        return cb.and(
+		                cb.equal(root.get("oficina").get("idOficina"), stockSeguridad.getIdOficina()),
+		                cb.equal(root.get("articulo").get("codCategoria"), stockSeguridad.getCodCategoria()),
+		                cb.equal(root.get("articulo").get("codSubcategoria"), stockSeguridad.getCodSubcategoria())
+		        );
+		    };
+
+		    List<InventarioEntity> inventarioList = inventarioRepository.findAll(spec);
+		    int stockSum = inventarioList.stream().mapToInt(InventarioEntity::getStock).sum();
+
+		    if (stockSum < stockSeguridad.getCantidad()) {
+		    	return true;
+		    }
+		}
+
+		return false;
+		
+    }
 
 }

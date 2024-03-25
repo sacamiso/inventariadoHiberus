@@ -32,6 +32,17 @@ import com.tfg.inventariado.repository.StockSeguridadRepository;
 @Service
 public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 
+	private static Boolean hayAvisos = false;
+	
+	public static Boolean getHayAvisos() {
+		return hayAvisos;
+	}
+
+	public static void setHayAvisos(Boolean hayAvisos) {
+		StockSeguridadProviderImpl.hayAvisos = hayAvisos;
+	}
+
+
 	@Autowired
 	private ModelMapper modelMapper;
 	
@@ -100,6 +111,9 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		
 		StockSeguridadEntity newStock = convertToMapEntity(seguridad);
 		newStock = stockSeguridadRepository.save(newStock);
+		
+		StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
+		
 		return MessageResponseDto.success("Stock de seguridad añadido con éxito");
 	}
 
@@ -117,6 +131,8 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 			this.actualizarCampos(seguridadToUpdate, seguridad);
 			
 			stockSeguridadRepository.save(seguridadToUpdate);
+			
+			StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
 			
 			return MessageResponseDto.success("Stock de seguridad editado con éxito");
 			
@@ -248,6 +264,41 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
     }
 	
 	
+	@Override
+	public MessageResponseDto<Boolean> hayAvisosPrimeraVez() {
+        
+        try {
+
+			List<StockSeguridadEntity> allStockSeguridad = stockSeguridadRepository.findAllOrdered();
+
+			for (StockSeguridadEntity stockSeguridad : allStockSeguridad) {
+			    Specification<InventarioEntity> spec = (root, query, cb) -> {
+			        return cb.and(
+			                cb.equal(root.get("oficina").get("idOficina"), stockSeguridad.getIdOficina()),
+			                cb.equal(root.get("articulo").get("codCategoria"), stockSeguridad.getCodCategoria()),
+			                cb.equal(root.get("articulo").get("codSubcategoria"), stockSeguridad.getCodSubcategoria())
+			        );
+			    };
+
+			    List<InventarioEntity> inventarioList = inventarioRepository.findAll(spec);
+			    int stockSum = inventarioList.stream().mapToInt(InventarioEntity::getStock).sum();
+
+			    if (stockSum < stockSeguridad.getCantidad()) {
+			    	StockSeguridadProviderImpl.setHayAvisos(true);
+			    	return MessageResponseDto.success(true);
+			    }
+			}
+			StockSeguridadProviderImpl.setHayAvisos(false);
+			return MessageResponseDto.success(false);
+		} catch (Exception e) {
+			return MessageResponseDto.fail("Se ha producido un error interno al recuperar los datos" + e.toString());
+		}
+    }
+	
+	@Override
+	public MessageResponseDto<Boolean> hayAvisosCron() {
+		return MessageResponseDto.success(StockSeguridadProviderImpl.getHayAvisos());
+    }
 
 	@Override
 	@Transactional
@@ -271,6 +322,35 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		List<StockSeguridadEntity> listaEntity = seguridad.stream().map(this::convertToMapEntity).collect(Collectors.toList());
 		this.stockSeguridadRepository.deleteByIdOficina(idOficina);
 		this.stockSeguridadRepository.saveAll(listaEntity);
+		
+		StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
+		
 		return MessageResponseDto.success("Stock de seguridad guardado con éxito");
 	}
+	
+	
+	private boolean compruebaAvisos() {
+        
+		List<StockSeguridadEntity> allStockSeguridad = stockSeguridadRepository.findAllOrdered();
+
+		for (StockSeguridadEntity stockSeguridad : allStockSeguridad) {
+		    Specification<InventarioEntity> spec = (root, query, cb) -> {
+		        return cb.and(
+		                cb.equal(root.get("oficina").get("idOficina"), stockSeguridad.getIdOficina()),
+		                cb.equal(root.get("articulo").get("codCategoria"), stockSeguridad.getCodCategoria()),
+		                cb.equal(root.get("articulo").get("codSubcategoria"), stockSeguridad.getCodSubcategoria())
+		        );
+		    };
+
+		    List<InventarioEntity> inventarioList = inventarioRepository.findAll(spec);
+		    int stockSum = inventarioList.stream().mapToInt(InventarioEntity::getStock).sum();
+
+		    if (stockSum < stockSeguridad.getCantidad()) {
+		    	return true;
+		    }
+		}
+
+		return false;
+		
+    }
 }
