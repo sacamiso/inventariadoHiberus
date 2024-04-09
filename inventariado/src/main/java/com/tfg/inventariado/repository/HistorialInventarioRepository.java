@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.tfg.inventariado.entity.HistorialInventarioEntity;
-import com.tfg.inventariado.entity.HistorialInventarioEntityID;
+import com.tfg.inventariado.entity.id.HistorialInventarioEntityID;
 
 @Repository
 public interface HistorialInventarioRepository extends JpaRepository<HistorialInventarioEntity, HistorialInventarioEntityID> {

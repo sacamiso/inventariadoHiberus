@@ -10,8 +10,8 @@ public interface AsignacionProvider {
 	AsignacionDto convertToMapDto(AsignacionEntity asignacion);
 	AsignacionEntity convertToMapEntity(AsignacionDto asignacion);
 	List<AsignacionDto> listAllAsignacion();
-	MessageResponseDto<String> addAsignación(AsignacionDto asignacion);
-	MessageResponseDto<String> editAsignación(AsignacionDto asignacion, Integer id);
+	MessageResponseDto<String> addAsignacion(AsignacionDto asignacion);
+	MessageResponseDto<String> editAsignacion(AsignacionDto asignacion, Integer id);
 	MessageResponseDto<AsignacionDto> getAsignacionById(Integer id);
 	
 	MessageResponseDto<String> finalizarAsignación(Integer id);

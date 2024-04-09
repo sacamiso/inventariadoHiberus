@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.tfg.inventariado.entity.StockSeguridadEntity;
-import com.tfg.inventariado.entity.StockSeguridadEntityID;
+import com.tfg.inventariado.entity.id.StockSeguridadEntityID;
 
 @Repository
 public interface StockSeguridadRepository extends JpaRepository<StockSeguridadEntity, StockSeguridadEntityID> {

@@ -1,4 +1,4 @@
-package com.tfg.inventariado.entity;
+package com.tfg.inventariado.entity.id;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

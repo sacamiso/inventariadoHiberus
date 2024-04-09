@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.tfg.inventariado.dto.LineaDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.entity.LineaEntity;
-import com.tfg.inventariado.entity.LineaEntityID;
+import com.tfg.inventariado.entity.id.LineaEntityID;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.LineaProvider;
 import com.tfg.inventariado.repository.LineaRepository;

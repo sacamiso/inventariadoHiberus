@@ -49,7 +49,7 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 	}
 
 	@Override
-	public MessageResponseDto<String> addAsignación(AsignacionDto asignacion) {
+	public MessageResponseDto<String> addAsignacion(AsignacionDto asignacion) {
 		if(asignacion.getIdAsignacion()!=null && asignacionRepository.findById(asignacion.getIdAsignacion()).isPresent()) {
 			return MessageResponseDto.fail("La asignación ya existe");
 		}
@@ -92,7 +92,7 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 	}
 
 	@Override
-	public MessageResponseDto<String> editAsignación(AsignacionDto asignacion, Integer id) {
+	public MessageResponseDto<String> editAsignacion(AsignacionDto asignacion, Integer id) {
 		Optional<AsignacionEntity> optionalAsignacion= asignacionRepository.findById(id);
 
 		if(optionalAsignacion.isPresent()) {

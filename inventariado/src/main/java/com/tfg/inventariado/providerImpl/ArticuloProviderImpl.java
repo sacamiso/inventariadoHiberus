@@ -56,9 +56,6 @@ public class ArticuloProviderImpl implements ArticuloProvider {
 
 	@Override
 	public MessageResponseDto<String> addArticulo(ArticuloDto articulo) {
-		if(articuloExisteByID(articulo.getCodigoArticulo())) {
-			return MessageResponseDto.fail("El artículo ya existe");
-		}
 		if(articulo.getDescripcion() == null || articulo.getDescripcion().isEmpty()) {
 			return MessageResponseDto.fail("La descripción es obligatoria");
 		}

@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.tfg.inventariado.entity.InventarioEntity;
-import com.tfg.inventariado.entity.InventarioEntityID;
+import com.tfg.inventariado.entity.id.InventarioEntityID;
 
 @Repository
 public interface InventarioRepository extends JpaRepository<InventarioEntity, InventarioEntityID> {

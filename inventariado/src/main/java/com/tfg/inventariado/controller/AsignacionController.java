@@ -31,7 +31,7 @@ public class AsignacionController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarAsignacion(@RequestBody @Valid AsignacionDto asignacionRequest) {
 		
-		MessageResponseDto<String> messageResponse = this.asignacionProvider.addAsignación(asignacionRequest);
+		MessageResponseDto<String> messageResponse = this.asignacionProvider.addAsignacion(asignacionRequest);
 
 		if (messageResponse.isSuccess()) {
 			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
@@ -50,7 +50,7 @@ public class AsignacionController {
 	@PutMapping("/editar/{id}")
 	public ResponseEntity<MessageResponseDto<String>> editAsignacionById(@PathVariable("id") Integer id,
 			 @RequestBody @Valid AsignacionDto asignacionUpadate) {
-		MessageResponseDto<String> messageResponse = this.asignacionProvider.editAsignación(asignacionUpadate, id);
+		MessageResponseDto<String> messageResponse = this.asignacionProvider.editAsignacion(asignacionUpadate, id);
 
 		if (messageResponse.isSuccess()) {
 			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);

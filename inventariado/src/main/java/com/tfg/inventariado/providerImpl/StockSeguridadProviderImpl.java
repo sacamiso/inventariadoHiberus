@@ -21,7 +21,7 @@ import com.tfg.inventariado.dto.StockSeguridadDto;
 import com.tfg.inventariado.dto.StockSeguridadFilterDto;
 import com.tfg.inventariado.entity.InventarioEntity;
 import com.tfg.inventariado.entity.StockSeguridadEntity;
-import com.tfg.inventariado.entity.StockSeguridadEntityID;
+import com.tfg.inventariado.entity.id.StockSeguridadEntityID;
 import com.tfg.inventariado.provider.CategoriaProvider;
 import com.tfg.inventariado.provider.OficinaProvider;
 import com.tfg.inventariado.provider.StockSeguridadProvider;

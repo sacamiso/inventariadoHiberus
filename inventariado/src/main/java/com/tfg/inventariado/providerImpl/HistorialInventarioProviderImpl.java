@@ -21,7 +21,7 @@ import com.tfg.inventariado.dto.HistorialInventarioFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.HistorialInventarioEntity;
-import com.tfg.inventariado.entity.HistorialInventarioEntityID;
+import com.tfg.inventariado.entity.id.HistorialInventarioEntityID;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.HistorialInventarioProvider;
 import com.tfg.inventariado.provider.OficinaProvider;

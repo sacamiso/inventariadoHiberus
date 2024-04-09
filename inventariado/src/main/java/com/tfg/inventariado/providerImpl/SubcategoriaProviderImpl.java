@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.SubcategoriaDto;
 import com.tfg.inventariado.entity.SubcategoriaEntity;
-import com.tfg.inventariado.entity.SubcategoriaEntityID;
+import com.tfg.inventariado.entity.id.SubcategoriaEntityID;
 import com.tfg.inventariado.provider.CategoriaProvider;
 import com.tfg.inventariado.provider.SubcategoriaProvider;
 import com.tfg.inventariado.repository.SubcategoriaRepository;
