@@ -3,7 +3,9 @@ package com.tfg.inventariado.provider;
 import java.util.List;
 
 import com.tfg.inventariado.dto.ArticuloDto;
+import com.tfg.inventariado.dto.ArticuloFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.ArticuloEntity;
 
 public interface ArticuloProvider {
@@ -18,4 +20,7 @@ public interface ArticuloProvider {
 	MessageResponseDto<List<ArticuloDto>> listArticulosBySubcategoria(String codigoCategoria, String codigoSubcategoria);
 
 	boolean articuloExisteByID(Integer articuloId);
+	
+	MessageResponseListDto<List<ArticuloDto>> listAllArticulosSkipLimit(Integer page, Integer size, ArticuloFilterDto filtros);
+
 }

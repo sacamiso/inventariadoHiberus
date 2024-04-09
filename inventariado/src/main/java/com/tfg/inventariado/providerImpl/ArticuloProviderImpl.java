@@ -7,10 +7,16 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.ArticuloDto;
+import com.tfg.inventariado.dto.ArticuloFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.ArticuloEntity;
 import com.tfg.inventariado.provider.ArticuloProvider;
 import com.tfg.inventariado.provider.CategoriaProvider;
@@ -160,6 +166,64 @@ public class ArticuloProviderImpl implements ArticuloProvider {
 	public boolean articuloExisteByID(Integer articuloId) {
 		Optional<ArticuloEntity> optionalArticulo = this.articuloRepository.findById(articuloId);
 		return optionalArticulo.isPresent() ? true : false;
+	}
+
+	@Override
+	public MessageResponseListDto<List<ArticuloDto>> listAllArticulosSkipLimit(Integer page, Integer size,
+			ArticuloFilterDto filtros) {
+Specification<ArticuloEntity> spec = Specification.where(null);
+		
+		if (filtros != null) {
+			if (filtros.getDescripcion() != null) {
+				String descripcion = filtros.getDescripcion();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("descripcion"), "%" + descripcion + "%"));
+	        }
+			if (filtros.getPrecioUnitarioMin() != null) {
+				Double precioMin = filtros.getPrecioUnitarioMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("precioUnitario"), precioMin));
+			}
+			if (filtros.getPrecioUnitarioMax() != null) {
+				Double precioMax = filtros.getPrecioUnitarioMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("precioUnitario"), precioMax));
+			}
+			if (filtros.getReferencia()!= null) {
+	            String referencia = filtros.getReferencia();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("referencia"), referencia));
+	        }
+			if (filtros.getCodigoCategoria() != null) {
+				String cat = filtros.getCodigoCategoria();
+			    spec = spec.and((root, query, cb) -> cb.equal(root.get("codCategoria"), cat));
+	        }
+			if (filtros.getCodigoSubcatogria() != null) {
+				String sub = filtros.getCodigoSubcatogria();
+			    spec = spec.and((root, query, cb) -> cb.equal(root.get("codSubcategoria"), sub));
+	        }
+			if (filtros.getIvaMin() != null) {
+				Double ivaMin = filtros.getIvaMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("iva"), ivaMin));
+			}
+			if (filtros.getIvaMax() != null) {
+				Double ivaMax = filtros.getIvaMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("iva"), ivaMax));
+			}
+			if (filtros.getFabricante() != null) {
+				String fab = filtros.getFabricante();
+			    spec = spec.and((root, query, cb) -> cb.equal(root.get("fabricante"), fab));
+	        }
+			if (filtros.getModelo() != null) {
+				String mod = filtros.getModelo();
+			    spec = spec.and((root, query, cb) -> cb.equal(root.get("modelo"), mod));
+	        }
+		}
+		
+		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "referencia"));
+		Page<ArticuloEntity> pageableArticulo = this.articuloRepository.findAll(spec,pageable);
+		
+		List<ArticuloEntity> listaEntity = pageableArticulo.getContent();
+		List<ArticuloDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) this.articuloRepository.count(spec));
 	}
 
 }
