@@ -49,9 +49,6 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 	@Override
 	public MessageResponseDto<String> addProveedor(ProveedorDto proveedor) {
 		
-		if(proveedorRepository.findById(proveedor.getIdProveedor()).isPresent()) {
-			return MessageResponseDto.fail("El proveedor ya existe");
-		}
 		if(proveedor.getCif()==null || !StringUtils.isNotBlank(proveedor.getCif())) {
 			return MessageResponseDto.fail("El CIF es obligatorio");
 		}
@@ -64,8 +61,7 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 		if(proveedor.getDireccion()==null || !StringUtils.isNotBlank(proveedor.getDireccion())) {
 			return MessageResponseDto.fail("La dirección es obligatoria");
 		}
-		String cp = String.valueOf(proveedor.getCodigoPostal());
-		if(cp.length() != 5) {
+		if(proveedor.getCodigoPostal()!= null && proveedor.getCodigoPostal()<=0) {
 			return MessageResponseDto.fail("El código postal es incorrecto");
 		}
 		if(proveedor.getLocalidad()==null || !StringUtils.isNotBlank(proveedor.getLocalidad())) {
