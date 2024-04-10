@@ -9,10 +9,16 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.EmpleadoDto;
+import com.tfg.inventariado.dto.EmpleadoFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.EmpleadoEntity;
 import com.tfg.inventariado.provider.EmpleadoProvider;
 import com.tfg.inventariado.provider.OficinaProvider;
@@ -172,6 +178,48 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 	public boolean empleadoExisteByUsuario(String usuario) {
 		List<EmpleadoEntity> listEmpleado = empleadoRepository.findByUsuario(usuario);
 		return listEmpleado.size() != 0;
+	}
+
+	@Override
+	public MessageResponseListDto<List<EmpleadoDto>> listAllEmpleadosSkipLimit(Integer page, Integer size,
+			EmpleadoFilterDto filtros) {
+		Specification<EmpleadoEntity> spec = Specification.where(null);
+		
+		if (filtros != null) {
+			if (filtros.getDni() != null) {
+				String dni = filtros.getDni();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("dni"), "%" + dni + "%"));
+	        }
+			if (filtros.getNombre() != null) {
+				String nombre = filtros.getNombre();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("nombre"), "%" + nombre + "%"));
+	        }
+			if (filtros.getApellidos() != null) {
+				String apell = filtros.getApellidos();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("apellidos"), "%" + apell + "%"));
+	        }
+			if (filtros.getUsuario() != null) {
+				String usu = filtros.getUsuario();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("usuario"), "%" + usu + "%"));
+	        }
+			if (filtros.getCodRol() != null) {
+				String rol = filtros.getCodRol();
+			    spec = spec.and((root, query, cb) -> cb.equal(root.get("codRol"), rol));
+	        }
+			if (filtros.getIdOficina() != null) {
+				Integer idOf = filtros.getIdOficina();
+			    spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOf));
+	        }
+		}
+		
+		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "dni"));
+		Page<EmpleadoEntity> pageableProveedor = this.empleadoRepository.findAll(spec,pageable);
+		
+		List<EmpleadoEntity> listaEntity = pageableProveedor.getContent();
+		List<EmpleadoDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) this.empleadoRepository.count(spec));
 	}
 
 }

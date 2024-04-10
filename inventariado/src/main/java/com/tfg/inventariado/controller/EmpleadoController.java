@@ -14,10 +14,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tfg.inventariado.dto.EmpleadoDto;
+import com.tfg.inventariado.dto.EmpleadoFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.provider.EmpleadoProvider;
 
 @RestController
@@ -53,6 +56,13 @@ public class EmpleadoController {
 	public ResponseEntity<List<EmpleadoDto>> listarEmpleados() {
 		List<EmpleadoDto> listaDto = this.empleadoProvider.listAllEmpleado();
 		return new ResponseEntity<List<EmpleadoDto>>(listaDto, HttpStatus.OK);
+	}
+	
+	@PostMapping("/listAllPag")
+	public ResponseEntity<MessageResponseListDto<List<EmpleadoDto>>> listarEmpleadosPag(@RequestParam(value = "limit", required = false) Integer limit,
+		    @RequestParam(value = "skip", required = false) Integer skip, @RequestBody EmpleadoFilterDto filtros) {
+		MessageResponseListDto<List<EmpleadoDto>> listaDto = this.empleadoProvider.listAllEmpleadosSkipLimit(skip,limit, filtros);
+		return new ResponseEntity<MessageResponseListDto<List<EmpleadoDto>>>(listaDto, HttpStatus.OK);
 	}
 	
 	@PutMapping("/editar/{id}")

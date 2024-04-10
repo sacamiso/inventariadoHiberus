@@ -9,16 +9,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
-public class EmpleadoDto {
+public class EmpleadoFilterDto {
 
-	private Integer idEmpleado;
 	private String dni;
 	private String nombre;
 	private String apellidos;
 	private String usuario;
-	private String contraseña;
 	private String codRol;
 	private Integer idOficina;
-	private RolDto rol;
-	private OficinaDto oficina;
+	
 }
