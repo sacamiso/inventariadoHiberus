@@ -168,7 +168,7 @@ public class ArticuloProviderImpl implements ArticuloProvider {
 	@Override
 	public MessageResponseListDto<List<ArticuloDto>> listAllArticulosSkipLimit(Integer page, Integer size,
 			ArticuloFilterDto filtros) {
-Specification<ArticuloEntity> spec = Specification.where(null);
+		Specification<ArticuloEntity> spec = Specification.where(null);
 		
 		if (filtros != null) {
 			if (filtros.getDescripcion() != null) {

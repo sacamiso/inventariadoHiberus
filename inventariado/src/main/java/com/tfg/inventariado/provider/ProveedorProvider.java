@@ -3,7 +3,9 @@ package com.tfg.inventariado.provider;
 import java.util.List;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.ProveedorDto;
+import com.tfg.inventariado.dto.ProveedorFirterDto;
 import com.tfg.inventariado.entity.ProveedorEntity;
 
 public interface ProveedorProvider {
@@ -16,4 +18,5 @@ public interface ProveedorProvider {
 	MessageResponseDto<ProveedorDto> getProveedorById(Integer id);
 	
 	boolean proveedorExisteByID(Integer id);
+	MessageResponseListDto<List<ProveedorDto>> listAllProveedoresSkipLimit(Integer page, Integer size, ProveedorFirterDto filtros);
 }

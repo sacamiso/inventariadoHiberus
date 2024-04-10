@@ -21,8 +21,6 @@ import com.tfg.inventariado.dto.ArticuloDto;
 import com.tfg.inventariado.dto.ArticuloFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
 import com.tfg.inventariado.dto.MessageResponseListDto;
-import com.tfg.inventariado.dto.PedidoDto;
-import com.tfg.inventariado.dto.PedidoFilterDto;
 import com.tfg.inventariado.provider.ArticuloProvider;
 
 @RestController

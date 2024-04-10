@@ -7,10 +7,16 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.ProveedorDto;
+import com.tfg.inventariado.dto.ProveedorFirterDto;
 import com.tfg.inventariado.entity.ProveedorEntity;
 import com.tfg.inventariado.provider.ProveedorProvider;
 import com.tfg.inventariado.repository.ProveedorRepository;
@@ -135,6 +141,52 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 	public boolean proveedorExisteByID(Integer id) {
 		Optional<ProveedorEntity> optionalProveedor = proveedorRepository.findById(id);
 		return optionalProveedor.isPresent() ? true : false;	
+	}
+
+	@Override
+	public MessageResponseListDto<List<ProveedorDto>> listAllProveedoresSkipLimit(Integer page, Integer size,
+			ProveedorFirterDto filtros) {
+		Specification<ProveedorEntity> spec = Specification.where(null);
+		
+		if (filtros != null) {
+			if (filtros.getCif() != null) {
+				String cif = filtros.getCif();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("cif"), "%" + cif + "%"));
+	        }
+			if (filtros.getRazonSocial() != null) {
+				String raz = filtros.getRazonSocial();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("razonSocial"), "%" + raz + "%"));
+	        }
+			if (filtros.getDireccion() != null) {
+				String direc = filtros.getDireccion();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("direccion"), "%" + direc + "%"));
+	        }
+			if (filtros.getCodigoPostal() != null) {
+				Integer cp = filtros.getCodigoPostal();
+			    spec = spec.and((root, query, cb) -> cb.equal(root.get("codigoPostal"), cp));
+	        }
+			if (filtros.getLocalidad() != null) {
+				String loc = filtros.getLocalidad();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("localidad"), "%" + loc + "%"));
+	        }
+			if (filtros.getTelefono() != null) {
+				String tele = filtros.getTelefono();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("telefono"), "%" + tele + "%"));
+	        }
+			if (filtros.getEmail() != null) {
+				String email = filtros.getEmail();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("email"), "%" + email + "%"));
+	        }
+		}
+		
+		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "cif"));
+		Page<ProveedorEntity> pageableProveedor = this.proveedorRepository.findAll(spec,pageable);
+		
+		List<ProveedorEntity> listaEntity = pageableProveedor.getContent();
+		List<ProveedorDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) this.proveedorRepository.count(spec));
 	}
 
 }
