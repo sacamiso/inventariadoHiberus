@@ -34,10 +34,6 @@ public class EmpleadoController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarEmpleado(@RequestBody @Valid EmpleadoDto empleadoRequest) {
 		try {
-			if (empleadoProvider.empleadoExisteByCodigo(empleadoRequest.getIdEmpleado())) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-						.body(MessageResponseDto.fail("El empleado ya existe"));
-			}
 			MessageResponseDto<String> messageResponse = empleadoProvider.addEmpleado(empleadoRequest);
 			
 			if( messageResponse.isSuccess()) {
