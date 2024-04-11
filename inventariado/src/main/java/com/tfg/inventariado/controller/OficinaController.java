@@ -14,10 +14,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.OficinaDto;
+import com.tfg.inventariado.dto.OficinaFilterDto;
 import com.tfg.inventariado.provider.OficinaProvider;
 
 @RestController
@@ -48,6 +51,13 @@ public class OficinaController {
 	public ResponseEntity<List<OficinaDto>> listarOficinas() {
 		List<OficinaDto> listaDto = this.oficinaProvider.listAllOficinas();
 		return new ResponseEntity<List<OficinaDto>>(listaDto, HttpStatus.OK);
+	}
+	
+	@PostMapping("/listAllPag")
+	public ResponseEntity<MessageResponseListDto<List<OficinaDto>>> listarOficinasPag(@RequestParam(value = "limit", required = false) Integer limit,
+		    @RequestParam(value = "skip", required = false) Integer skip, @RequestBody OficinaFilterDto filtros) {
+		MessageResponseListDto<List<OficinaDto>> listaDto = this.oficinaProvider.listAllOficinasSkipLimit(skip,limit, filtros);
+		return new ResponseEntity<MessageResponseListDto<List<OficinaDto>>>(listaDto, HttpStatus.OK);
 	}
 	
 	@PutMapping("/editar/{id}")

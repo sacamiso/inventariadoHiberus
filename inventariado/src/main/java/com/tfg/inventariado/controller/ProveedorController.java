@@ -52,7 +52,7 @@ public class ProveedorController {
 	}
 	
 	@PostMapping("/listAllPag")
-	public ResponseEntity<MessageResponseListDto<List<ProveedorDto>>> listarArticulosPag(@RequestParam(value = "limit", required = false) Integer limit,
+	public ResponseEntity<MessageResponseListDto<List<ProveedorDto>>> listarProveedoresPag(@RequestParam(value = "limit", required = false) Integer limit,
 		    @RequestParam(value = "skip", required = false) Integer skip, @RequestBody ProveedorFirterDto filtros) {
 		MessageResponseListDto<List<ProveedorDto>> listaDto = this.proveedorProvider.listAllProveedoresSkipLimit(skip,limit, filtros);
 		return new ResponseEntity<MessageResponseListDto<List<ProveedorDto>>>(listaDto, HttpStatus.OK);

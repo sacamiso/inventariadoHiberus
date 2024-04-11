@@ -7,10 +7,16 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.OficinaDto;
+import com.tfg.inventariado.dto.OficinaFilterDto;
 import com.tfg.inventariado.entity.OficinaEntity;
 import com.tfg.inventariado.provider.OficinaProvider;
 import com.tfg.inventariado.repository.OficinaRepository;
@@ -42,9 +48,6 @@ public class OficinaProviderImpl implements OficinaProvider {
 
 	@Override
 	public MessageResponseDto<String> addOficina(OficinaDto oficina) {
-		if(oficinaExisteByID(oficina.getIdOficina())) {
-			return MessageResponseDto.fail("La oficina ya existe");
-		}
 		if(oficina.getDireccion()==null || oficina.getDireccion().isEmpty()) {
 			return MessageResponseDto.fail("La direccion es obligatoria");
 		}
@@ -113,6 +116,44 @@ public class OficinaProviderImpl implements OficinaProvider {
 	public boolean oficinaExisteByID(Integer id) {
 		Optional<OficinaEntity> optionalOficina = oficinaRepository.findById(id);
 		return optionalOficina.isPresent() ? true : false;
+	}
+
+	@Override
+	public MessageResponseListDto<List<OficinaDto>> listAllOficinasSkipLimit(Integer page, Integer size,
+			OficinaFilterDto filtros) {
+		Specification<OficinaEntity> spec = Specification.where(null);
+		
+		if (filtros != null) {
+			if (filtros.getDireccion() != null) {
+				String direc = filtros.getDireccion();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("direccion"), "%" + direc + "%"));
+	        }
+			if (filtros.getCodigoPostal() != null) {
+				Integer cp = filtros.getCodigoPostal();
+			    spec = spec.and((root, query, cb) -> cb.equal(root.get("codigoPostal"), cp));
+	        }
+			if (filtros.getLocalidad() != null) {
+				String loc = filtros.getLocalidad();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("localidad"), "%" + loc + "%"));
+	        }
+			if (filtros.getProvincia() != null) {
+				String prov = filtros.getProvincia();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("provincia"), "%" + prov + "%"));
+	        }
+			if (filtros.getPais() != null) {
+				String pais = filtros.getPais();
+			    spec = spec.and((root, query, cb) -> cb.like(root.get("pais"), "%" + pais + "%"));
+	        }
+		}
+		
+		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "localidad"));
+		Page<OficinaEntity> pageableOficina = this.oficinaRepository.findAll(spec,pageable);
+		
+		List<OficinaEntity> listaEntity = pageableOficina.getContent();
+		List<OficinaDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) this.oficinaRepository.count(spec));
 	}
 
 }
