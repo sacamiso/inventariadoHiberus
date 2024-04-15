@@ -3,7 +3,9 @@ package com.tfg.inventariado.provider;
 import java.util.List;
 
 import com.tfg.inventariado.dto.AsignacionDto;
+import com.tfg.inventariado.dto.AsignacionFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.AsignacionEntity;
 
 public interface AsignacionProvider {
@@ -24,4 +26,6 @@ public interface AsignacionProvider {
 	MessageResponseDto<List<AsignacionDto>> listAsignacionByUnidadSinFinalizar(Integer codUnidad);
 	
 	boolean asignacionExisteByID(Integer id);
+	
+	MessageResponseListDto<List<AsignacionDto>> listAllAsignacionesSkipLimit(Integer page, Integer size, AsignacionFilterDto filtros);
 }

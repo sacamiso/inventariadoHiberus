@@ -2,6 +2,9 @@ package com.tfg.inventariado.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,4 +19,7 @@ public interface AsignacionRepository extends JpaRepository<AsignacionEntity, In
 	List<AsignacionEntity> findByFechaFinIsNotNullAndIdEmpleado(Integer idEmpleado);
 	List<AsignacionEntity> findByCodUnidad(Integer codUnidad);
 	List<AsignacionEntity> findByCodUnidadAndFechaFinIsNull(Integer codUnidad);
+	
+	Page<AsignacionEntity> findAll(Specification<AsignacionEntity> spec,Pageable pageable);
+	long count(Specification<AsignacionEntity> spec);
 }

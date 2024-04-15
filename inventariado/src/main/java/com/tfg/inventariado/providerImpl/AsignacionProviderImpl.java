@@ -7,10 +7,16 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.AsignacionDto;
+import com.tfg.inventariado.dto.AsignacionFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.entity.AsignacionEntity;
 import com.tfg.inventariado.provider.AsignacionProvider;
 import com.tfg.inventariado.provider.EmpleadoProvider;
@@ -203,6 +209,57 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 	public boolean asignacionExisteByID(Integer id) {
 		Optional<AsignacionEntity> optionalAsignacion= asignacionRepository.findById(id);
 		return optionalAsignacion.isPresent() ? true : false;
+	}
+
+	@Override
+	public MessageResponseListDto<List<AsignacionDto>> listAllAsignacionesSkipLimit(Integer page, Integer size,
+			AsignacionFilterDto filtros) {
+		Specification<AsignacionEntity> spec = Specification.where(null);
+		if (filtros != null) {
+			if (filtros.getFechaInicio() != null) {
+				LocalDate fechaI = filtros.getFechaInicio();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("fechaInicio"), fechaI));
+	        }
+			if (filtros.getFechaFin() != null) {
+				LocalDate fechaF = filtros.getFechaFin();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("fechaFin"), fechaF));
+	        }
+			if (filtros.getDniEmpleado() != null) {
+				String dni = filtros.getDniEmpleado();
+			    spec = spec.and((root, query, cb) -> cb.like(root.join("empleado").get("dni"), "%" + dni + "%"));
+	        }
+			if (filtros.getNombreEmpleado() != null) {
+				String nombre = filtros.getNombreEmpleado();
+			    spec = spec.and((root, query, cb) -> cb.like(root.join("empleado").get("nombre"), "%" + nombre + "%"));
+	        }
+			if (filtros.getApellidosEmpleado() != null) {
+				String apell = filtros.getApellidosEmpleado();
+			    spec = spec.and((root, query, cb) -> cb.like(root.join("empleado").get("apellidos"), "%" + apell + "%"));
+	        }
+			if (filtros.getCodOficinaEmpleado()!= null && filtros.getCodOficinaEmpleado()!= 0) {
+	            Integer idOficina = filtros.getCodOficinaEmpleado();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.join("empleado").get("idOficina"), idOficina));
+	        }
+			if (filtros.getCodUnidad()!= null) {
+	            Integer codUnidad = filtros.getCodUnidad();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codUnidad"), codUnidad));
+	        }
+			if (filtros.getFinalizadas() != null) {
+	            if (filtros.getFinalizadas()) {
+	                spec = spec.and((root, query, cb) -> cb.isNotNull(root.get("fechaFin")));
+	            } else {
+	                spec = spec.and((root, query, cb) -> cb.isNull(root.get("fechaFin")));
+	            }
+	        }
+		}
+		
+		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaInicio"));
+		Page<AsignacionEntity> pageablesalida = asignacionRepository.findAll(spec,pageable);
+		
+		List<AsignacionEntity> listaEntity = pageablesalida.getContent();
+		List<AsignacionDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		
+		return MessageResponseListDto.success(listaDto, page, size,(int) asignacionRepository.count(spec));
 	}
 
 }

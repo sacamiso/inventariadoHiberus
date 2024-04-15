@@ -14,10 +14,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tfg.inventariado.dto.AsignacionDto;
+import com.tfg.inventariado.dto.AsignacionFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
+import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.provider.AsignacionProvider;
 
 @RestController
@@ -45,6 +48,13 @@ public class AsignacionController {
 	public ResponseEntity<List<AsignacionDto>> listarAsignación() {
 		List<AsignacionDto> listaDto = this.asignacionProvider.listAllAsignacion();
 		return new ResponseEntity<List<AsignacionDto>>(listaDto, HttpStatus.OK);
+	}
+	
+	@PostMapping("/listAllPag")
+	public ResponseEntity<MessageResponseListDto<List<AsignacionDto>>> listarAsignacionesPag(@RequestParam(value = "limit", required = false) Integer limit,
+		    @RequestParam(value = "skip", required = false) Integer skip, @RequestBody AsignacionFilterDto filtros) {
+		MessageResponseListDto<List<AsignacionDto>> listaDto = this.asignacionProvider.listAllAsignacionesSkipLimit(skip,limit,filtros);
+		return new ResponseEntity<MessageResponseListDto<List<AsignacionDto>>>(listaDto, HttpStatus.OK);
 	}
 	
 	@PutMapping("/editar/{id}")
