@@ -31,4 +31,6 @@ public class PedidoFilterDto {
 	private Boolean recibido;
 	private Double costeUnitarioMin;
 	private Double costeUnitarioMax;
+	
+	private Boolean devuelto;
 }

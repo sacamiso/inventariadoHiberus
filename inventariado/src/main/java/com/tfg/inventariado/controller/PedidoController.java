@@ -68,6 +68,17 @@ public class PedidoController {
 		}
 	}
 	
+	@PutMapping("/devolver")
+	public ResponseEntity<MessageResponseDto<String>> devolverPedido(@RequestParam(value = "idP", required = true) Integer id) {
+		MessageResponseDto<String> messageResponse = this.pedidoProvider.devolverPedido(id);
+		if (messageResponse.isSuccess()) {
+			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(MessageResponseDto.fail(messageResponse.getError()));
+		}
+	}
+	
 	@PutMapping("/editar/{id}")
 	public ResponseEntity<MessageResponseDto<String>> editPedidoByCodigo(@PathVariable("id") Integer id,
 			@RequestBody @Valid PedidoDto pedidoUpadate) {

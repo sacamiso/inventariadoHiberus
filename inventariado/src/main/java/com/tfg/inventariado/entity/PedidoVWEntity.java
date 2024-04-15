@@ -62,6 +62,9 @@ public class PedidoVWEntity {
 	@Column(name="medio_pago", nullable = false)
 	private String medioPago;
 	
+	@Column(name="devuelto")
+	private Boolean devuelto;
+	
 	@Column(name="coste_unitario")
 	private Double costeUnitario;
 	

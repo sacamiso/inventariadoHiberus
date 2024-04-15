@@ -28,4 +28,5 @@ public interface PedidoProvider {
 	MessageResponseListDto<List<PedidoDto>> listAllPedidosSkipLimit(Integer page, Integer size, PedidoFilterDto filtros);
 	MessageResponseDto<String> marcarRecibido(Integer id);
 	
+	MessageResponseDto<String> devolverPedido(Integer id);
 }

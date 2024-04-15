@@ -66,6 +66,9 @@ public class PedidoEntity {
 	@Column(name="medio_pago", nullable = false)
 	private String medioPago;
 	
+	@Column(name="devuelto")
+	private Boolean devuelto;
+	
 	@ManyToOne
 	@JoinColumn(name="id_empleado", referencedColumnName="id_empleado", insertable = false, updatable = false)
 	//Primero el campo de esta tabla y luego a la que referencia

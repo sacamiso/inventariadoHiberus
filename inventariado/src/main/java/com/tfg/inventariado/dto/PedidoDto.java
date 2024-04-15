@@ -26,6 +26,7 @@ public class PedidoDto {
     private LocalDate fechaRecepcion;
 	private String condicionPago;
 	private String medioPago;
+	private Boolean devuelto;
 	
 	private Double costeUnitario;
 	private Integer numeroUnidades;

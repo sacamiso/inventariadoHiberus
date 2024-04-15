@@ -385,6 +385,13 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 	                spec = spec.and((root, query, cb) -> cb.isNull(root.get("fechaRecepcion")));
 	            }
 	        }
+			if (filtros.getDevuelto() != null) {
+	            if (filtros.getDevuelto()) {
+	                spec = spec.and((root, query, cb) -> cb.isTrue(root.get("devuelto")));
+	            } else {
+	                spec = spec.and((root, query, cb) -> cb.isFalse(root.get("devuelto")));
+	            }
+	        }
 			if (filtros.getCosteUnitarioMin() != null && filtros.getCosteUnitarioMin() != 0) {
 				Double costeUnMin = filtros.getCosteUnitarioMin();
 	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costeUnitario"), costeUnMin));
@@ -449,6 +456,55 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 			
 		}else {
 			return MessageResponseDto.fail("El pedido que se desea marcar como recibido no existe");
+		}
+	}
+
+	@Override
+	@Transactional
+	public MessageResponseDto<String> devolverPedido(Integer id) {
+		Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(id);
+		if(optionalPedido.isPresent()) {
+			PedidoEntity pedidoToUpdate = optionalPedido.get();
+			
+			if(pedidoToUpdate.getFechaRecepcion()== null) {
+				return MessageResponseDto.fail("No se puede devolver un pedio que no se ha recibido");
+			}
+			
+			OficinaDto of = oficinaProvider.getOficinaById(pedidoToUpdate.getIdOficina()).getMessage();
+			MessageResponseDto<List<LineaDto>> lineas = lineaProvider.listLineasByPedido(pedidoToUpdate.getNumeroPedido());
+			ArticuloDto art;
+			MessageResponseDto<InventarioDto> inventario;
+			InventarioDto inventarioDto;
+			MessageResponseDto<String>  msgInventario;
+			
+			if(lineas.isSuccess()) {
+				for (LineaDto linea : lineas.getMessage()) {
+					art = linea.getArticulo();
+					inventario = inventarioProvider.getInventarioById(pedidoToUpdate.getIdOficina(), art.getCodigoArticulo());
+
+					if(inventario.getMessage().getStock()- linea.getNumeroUnidades()< 0) {
+						return MessageResponseDto.fail("No se puede devolver el pedido, ya se le ha dado salida a alguno de los productos");
+					}
+					if(inventario.isSuccess()) {
+						inventarioDto = new InventarioDto(art.getCodigoArticulo(), pedidoToUpdate.getIdOficina(), inventario.getMessage().getStock()- linea.getNumeroUnidades() ,art,of );
+						msgInventario = inventarioProvider.editInventario(inventarioDto, pedidoToUpdate.getIdOficina(),art.getCodigoArticulo());
+					}else {
+						return MessageResponseDto.fail("No se puede devolver el pedido, ya se le ha dado salida a alguno de los productos");
+					}
+					if(!msgInventario.isSuccess()) {
+						return MessageResponseDto.fail(msgInventario.getError());
+					}
+				}
+			}
+			
+			pedidoToUpdate.setDevuelto(true);
+			
+			pedidoRepository.save(pedidoToUpdate);
+			
+			return MessageResponseDto.success("Pedido devuelto");
+			
+		}else {
+			return MessageResponseDto.fail("El pedido que se desea devolver no existe");
 		}
 	}
 
