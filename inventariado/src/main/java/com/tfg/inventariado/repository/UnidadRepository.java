@@ -30,4 +30,8 @@ public interface UnidadRepository  extends JpaRepository<UnidadEntity, Integer> 
     long countBySalidaId(@Param("idSalida") Integer idSalida);
 	
 	List<UnidadEntity> findByIdOficinaAndCodArticulo(Integer idOficina, Integer codArticulo);
+	
+	//Este método me da las unidades de una oficina concreta con un estado concreto, que no se les ha dado salida y que no están en ninguna asignación activa
+    @Query("SELECT u FROM UnidadEntity u LEFT JOIN AsignacionEntity a ON u.codigoInterno = a.codUnidad AND a.fechaFin IS NULL WHERE u.idOficina = :idOficina AND u.codEstado = :codEstado AND a.idAsignacion IS NULL")
+    List<UnidadEntity> findUnidadesLibresByEstadoAndOficina(@Param("codEstado") String codEstado, @Param("idOficina") Integer idOficina);
 }

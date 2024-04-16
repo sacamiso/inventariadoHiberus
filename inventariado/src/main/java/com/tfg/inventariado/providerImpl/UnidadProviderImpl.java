@@ -426,4 +426,14 @@ public class UnidadProviderImpl implements UnidadProvider {
 		return MessageResponseDto.success(pedidosMostrar);
  
 	}
+
+	@Override
+	public MessageResponseDto<List<UnidadDto>> listUnidadDisponiblesSinAsignarByOficina(Integer idOficina) {
+		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
+			return MessageResponseDto.fail("La oficina no existe");
+		}
+		List<UnidadEntity> listaEntity = this.unidadRepository.findUnidadesLibresByEstadoAndOficina("OP",idOficina);
+		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return MessageResponseDto.success(listaDto);
+	}
 }

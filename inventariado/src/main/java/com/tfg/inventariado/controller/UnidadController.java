@@ -189,4 +189,15 @@ public class UnidadController {
 					.body(MessageResponseDto.fail(messageResponse.getError()));
 		}
 	}
+	
+	@GetMapping("/listDisponiblesSinAsignar/{idOf}")
+	public ResponseEntity<MessageResponseDto<List<UnidadDto>>> listUnidadDisponiblesSinAsignarByOficina(@PathVariable("idOf") Integer id) {
+		MessageResponseDto<List<UnidadDto>> listaDto = this.unidadProvider.listUnidadDisponiblesSinAsignarByOficina(id);
+		if(listaDto.isSuccess()) {
+			return ResponseEntity.status(HttpStatus.OK).body(listaDto);
+		}else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(MessageResponseDto.fail(listaDto.getError()));
+		}
+	}
 }
