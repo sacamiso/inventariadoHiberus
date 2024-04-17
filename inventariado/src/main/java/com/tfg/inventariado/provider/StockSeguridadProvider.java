@@ -28,4 +28,6 @@ public interface StockSeguridadProvider {
 	MessageResponseDto<List<AvisoDto>> validarStockSeguridadAvisos();
 	MessageResponseDto<Boolean> hayAvisosPrimeraVez();
 	MessageResponseDto<Boolean> hayAvisosCron();
+	
+	MessageResponseDto<String> vaciarStockByOf(Integer idOficina);
 }

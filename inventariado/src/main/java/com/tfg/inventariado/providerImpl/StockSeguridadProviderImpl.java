@@ -353,4 +353,15 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		return false;
 		
     }
+
+	@Override
+	@Transactional
+	public MessageResponseDto<String> vaciarStockByOf(Integer idOficina) {
+		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
+			return MessageResponseDto.fail("La oficina no existe");
+		}
+		this.stockSeguridadRepository.deleteByIdOficina(idOficina);
+		StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
+		return MessageResponseDto.success("Stock de seguridad guardado con éxito");
+	}
 }

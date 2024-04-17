@@ -1,6 +1,7 @@
 package com.tfg.inventariado.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -49,6 +50,19 @@ public class StockSeguridadController {
 	public ResponseEntity<MessageResponseDto<?>> guardarStockSeguridad(@RequestBody @Valid List<StockSeguridadDto> stockSguridadRequest) {
 		
 		MessageResponseDto<String> messageResponse = this.seguridadProvider.guardarStockSeguridadOf(stockSguridadRequest);
+
+		if (messageResponse.isSuccess()) {
+			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(MessageResponseDto.fail(messageResponse.getError()));
+		}
+	}
+	
+	@PostMapping("/vaciar")
+	public ResponseEntity<MessageResponseDto<String>> vaciarStockSeguridad(@RequestBody Map<String, Integer> body) {
+		Integer idOficina = body.get("idOficina");
+		MessageResponseDto<String> messageResponse = this.seguridadProvider.vaciarStockByOf(idOficina);
 
 		if (messageResponse.isSuccess()) {
 			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
