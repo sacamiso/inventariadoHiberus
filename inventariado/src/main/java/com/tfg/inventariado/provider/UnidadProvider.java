@@ -36,5 +36,5 @@ public interface UnidadProvider {
 	MessageResponseDto<List<PedidoDto>> pedidosDisponiblesByOficinaAndArticulo(Integer idOficina, Integer codArticulo);
 	
 	MessageResponseDto<List<UnidadDto>> listUnidadDisponiblesSinAsignarByOficina(Integer idOficina);
-
+	MessageResponseDto<Boolean> estaAsignada(Integer codInterno);
 }

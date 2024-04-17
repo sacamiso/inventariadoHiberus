@@ -46,10 +46,7 @@ public class UnidadProviderImpl implements UnidadProvider {
 	
 	@Autowired
 	private UnidadRepository unidadRepository;
-	
-	@Autowired
-	private AsignacionRepository asignaciónRepository;
-	
+		
 	@Autowired
 	private OficinaProvider oficinaProvider;
 	
@@ -307,7 +304,7 @@ public class UnidadProviderImpl implements UnidadProvider {
 			if(salida.getMessage().getCodArticulo() != unidad.getCodArticulo() && salida.getMessage().getIdOficina() != unidad.getIdOficina()) {
 				return MessageResponseDto.fail("la salida elegida no vale para esta unidad");
 			}
-			if(asignaciónRepository.existsByCodUnidadAndFechaFinIsNull(idUnidad)) {
+			if(asignacionRepository.existsByCodUnidadAndFechaFinIsNull(idUnidad)) {
 				return MessageResponseDto.fail("La unidad se encuentra en una asignación");
 			}
 
@@ -346,6 +343,15 @@ public class UnidadProviderImpl implements UnidadProvider {
 	            Integer codArticulo = filtros.getCodArticulo();
 	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codArticulo"), codArticulo));
 	        }
+			if (filtros.getDisponible() != null) {
+				List<UnidadEntity> unidadesDisponibles = this.unidadRepository.findUnidadesLibres();
+			    if (filtros.getDisponible()) {
+			        spec = spec.and((root, query, cb) -> cb.isTrue(root.in(unidadesDisponibles)));
+			    } else {
+			        spec = spec.and((root, query, cb) -> cb.not(root.in(unidadesDisponibles)));
+			    }
+			}
+
 		}
 		
 		PageRequest pageable = PageRequest.of(page, size, Sort.by("idOficina", "codArticulo", "codigoInterno"));
@@ -435,5 +441,16 @@ public class UnidadProviderImpl implements UnidadProvider {
 		List<UnidadEntity> listaEntity = this.unidadRepository.findUnidadesLibresByEstadoAndOficina("OP",idOficina);
 		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
+	}
+
+	@Override
+	public MessageResponseDto<Boolean> estaAsignada(Integer codInterno) {
+		List<UnidadEntity> unidadesAsignadas = this.unidadRepository.findUnidadesAsignadas();
+		for (UnidadEntity unidadEntity : unidadesAsignadas) {
+			if(codInterno.equals(unidadEntity.getCodigoInterno())) {
+				return MessageResponseDto.success(true);
+			}
+		}
+		return MessageResponseDto.success(false);
 	}
 }

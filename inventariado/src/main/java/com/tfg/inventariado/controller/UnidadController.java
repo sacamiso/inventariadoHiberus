@@ -200,4 +200,16 @@ public class UnidadController {
 					.body(MessageResponseDto.fail(listaDto.getError()));
 		}
 	}
+	
+	@GetMapping("/asignada/{codInterno}")
+	public ResponseEntity<MessageResponseDto<Boolean>> estaAsignada(@PathVariable("codInterno") Integer codInterno) {
+		MessageResponseDto<Boolean> res = this.unidadProvider.estaAsignada(codInterno);
+		if(res.isSuccess()) {
+			return ResponseEntity.status(HttpStatus.OK).body(res);
+		}else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(MessageResponseDto.fail(res.getError()));
+		}
+	}
+	
 }

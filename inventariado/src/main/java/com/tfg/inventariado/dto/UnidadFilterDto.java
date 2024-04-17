@@ -17,4 +17,5 @@ public class UnidadFilterDto {
 	private LocalDate fechaSalida;
 	private Integer idOficina;
 	private Integer codArticulo;
+	private Boolean disponible;
 }
