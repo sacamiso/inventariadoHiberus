@@ -125,6 +125,9 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 		if(asignacionToUpdate.getFechaFin()!=null && !asignacionToUpdate.getFechaFin().isBefore(asignacionToUpdate.getFechaInicio()) && !asignacionToUpdate.getFechaFin().isAfter(LocalDate.now())) {
 			asignacion.setFechaFin(asignacionToUpdate.getFechaFin());
 		}
+		if(asignacionToUpdate.getFechaFin()==null ) {
+			asignacion.setFechaFin(null);
+		}
 	}
 
 	@Override
