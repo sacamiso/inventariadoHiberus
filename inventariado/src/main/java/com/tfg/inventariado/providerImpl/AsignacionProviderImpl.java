@@ -55,7 +55,7 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 	}
 
 	@Override
-	public MessageResponseDto<String> addAsignacion(AsignacionDto asignacion) {
+	public MessageResponseDto<Integer> addAsignacion(AsignacionDto asignacion) {
 		if(asignacion.getIdAsignacion()!=null && asignacionRepository.findById(asignacion.getIdAsignacion()).isPresent()) {
 			return MessageResponseDto.fail("La asignación ya existe");
 		}
@@ -94,7 +94,7 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 		}
 		AsignacionEntity newAsignacion = convertToMapEntity(asignacion);
 		newAsignacion = asignacionRepository.save(newAsignacion);
-		return MessageResponseDto.success("Asignación añadida con éxito");
+		return MessageResponseDto.success(newAsignacion.getIdAsignacion());
 	}
 
 	@Override

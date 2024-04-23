@@ -36,7 +36,7 @@ public class UnidadController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarUnidad(@RequestBody @Valid UnidadDto unidadRequest) {
 		
-		MessageResponseDto<String> messageResponse = this.unidadProvider.addUnidad(unidadRequest);
+		MessageResponseDto<Integer> messageResponse = this.unidadProvider.addUnidad(unidadRequest);
 
 		if (messageResponse.isSuccess()) {
 			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);

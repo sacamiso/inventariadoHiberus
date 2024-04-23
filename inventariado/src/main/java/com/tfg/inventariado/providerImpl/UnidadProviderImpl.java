@@ -88,7 +88,7 @@ public class UnidadProviderImpl implements UnidadProvider {
 	}
 
 	@Override
-	public MessageResponseDto<String> addUnidad(UnidadDto unidad) {
+	public MessageResponseDto<Integer> addUnidad(UnidadDto unidad) {
 		if(unidad.getCodigoInterno()==null) {
 			return MessageResponseDto.fail("El código interno es obligatorio");
 		}
@@ -129,7 +129,7 @@ public class UnidadProviderImpl implements UnidadProvider {
 		
 		UnidadEntity newUnidad = convertToMapEntity(unidad);
 		newUnidad = unidadRepository.save(newUnidad);
-		return MessageResponseDto.success("Unidad añadida con éxito");
+		return MessageResponseDto.success(newUnidad.getCodigoInterno());
 	}
 
 	@Override

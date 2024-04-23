@@ -15,7 +15,7 @@ public interface UnidadProvider {
 	UnidadDto convertToMapDto(UnidadEntity unidad);
 	UnidadEntity convertToMapEntity(UnidadDto unidad);
 	List<UnidadDto> listAllUnidades();
-	MessageResponseDto<String> addUnidad(UnidadDto unidad);
+	MessageResponseDto<Integer> addUnidad(UnidadDto unidad);
 	MessageResponseDto<String> editUnidad(UnidadDto unidad, Integer id);
 	MessageResponseDto<UnidadDto> getUnidadById(Integer id);
 	

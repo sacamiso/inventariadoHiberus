@@ -13,7 +13,7 @@ public interface EmpleadoProvider {
 	EmpleadoDto convertToMapDto(EmpleadoEntity empleado);
 	EmpleadoEntity convertToMapEntity(EmpleadoDto empleado);
 	List<EmpleadoDto> listAllEmpleado();
-	MessageResponseDto<String> addEmpleado(EmpleadoDto empleado);
+	MessageResponseDto<Integer> addEmpleado(EmpleadoDto empleado);
 	MessageResponseDto<String> editEmpleado(EmpleadoDto empleado, Integer id);
 	MessageResponseDto<EmpleadoDto> getEmpleadoById(Integer id);
 	MessageResponseDto<List<EmpleadoDto>> listEmpleadosByOficina(Integer idOficina);

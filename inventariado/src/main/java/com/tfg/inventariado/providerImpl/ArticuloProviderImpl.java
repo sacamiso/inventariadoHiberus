@@ -55,7 +55,7 @@ public class ArticuloProviderImpl implements ArticuloProvider {
 	}
 
 	@Override
-	public MessageResponseDto<String> addArticulo(ArticuloDto articulo) {
+	public MessageResponseDto<Integer> addArticulo(ArticuloDto articulo) {
 		if(articulo.getDescripcion() == null || articulo.getDescripcion().isEmpty()) {
 			return MessageResponseDto.fail("La descripción es obligatoria");
 		}
@@ -85,7 +85,7 @@ public class ArticuloProviderImpl implements ArticuloProvider {
 		}
 		ArticuloEntity newArticulo = this.convertToMapEntity(articulo);
 		newArticulo = this.articuloRepository.save(newArticulo);
-		return MessageResponseDto.success("Artículo añadido con éxito");
+		return MessageResponseDto.success(newArticulo.getCodigoArticulo());
 	}
 
 	@Override

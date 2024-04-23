@@ -57,7 +57,7 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 	}
 
 	@Override
-	public MessageResponseDto<String> addEmpleado(EmpleadoDto empleado) {
+	public MessageResponseDto<Integer> addEmpleado(EmpleadoDto empleado) {
 		if(empleado.getApellidos()==null || empleado.getApellidos().isEmpty()) {
 			return MessageResponseDto.fail("El apellido es obligatorio");
 		}
@@ -87,7 +87,7 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 		}
 		EmpleadoEntity newEmpleado = convertToMapEntity(empleado);
 		newEmpleado = empleadoRepository.save(newEmpleado);
-		return MessageResponseDto.success("Empelado añadido con éxito");
+		return MessageResponseDto.success(newEmpleado.getIdEmpleado());
 	}
 
 	@Override

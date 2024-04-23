@@ -13,7 +13,7 @@ public interface ProveedorProvider {
 	ProveedorDto convertToMapDto(ProveedorEntity proveedor);
 	ProveedorEntity convertToMapEntity(ProveedorDto proveedor);
 	List<ProveedorDto> listAllProveedores();
-	MessageResponseDto<String> addProveedor(ProveedorDto proveedor);
+	MessageResponseDto<Integer> addProveedor(ProveedorDto proveedor);
 	MessageResponseDto<String> editProveedor(ProveedorDto proveedor, Integer id);
 	MessageResponseDto<ProveedorDto> getProveedorById(Integer id);
 	

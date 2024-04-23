@@ -34,7 +34,7 @@ public class OficinaController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarOficina(@RequestBody @Valid OficinaDto oficinaRequest) {
 		try {
-			MessageResponseDto<String> messageResponse = oficinaProvider.addOficina(oficinaRequest);
+			MessageResponseDto<Integer> messageResponse = oficinaProvider.addOficina(oficinaRequest);
 			if (messageResponse.isSuccess()) {
 				return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
 			} else {

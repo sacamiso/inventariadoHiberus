@@ -122,7 +122,7 @@ public class PedidoProviderImpl implements PedidoProvider {
 
 	@Transactional
 	@Override
-	public MessageResponseDto<String> addPedido(PedidoDto pedido) {
+	public MessageResponseDto<?> addPedido(PedidoDto pedido) {
 		
 		if(pedido.getNumeroPedido()!=null && pedidoRepository.findById(pedido.getNumeroPedido()).isPresent()) {
 			return MessageResponseDto.fail("El pedido ya existe");
@@ -195,7 +195,7 @@ public class PedidoProviderImpl implements PedidoProvider {
 		}
 		
 		
-		return MessageResponseDto.success("Pedido añadido con éxito");
+		return MessageResponseDto.success(newPedido.getNumeroPedido());
 	}
 
 	@Override

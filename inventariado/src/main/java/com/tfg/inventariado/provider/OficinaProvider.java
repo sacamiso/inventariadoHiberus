@@ -12,7 +12,7 @@ public interface OficinaProvider {
 	OficinaDto convertToMapDto(OficinaEntity oficina);
 	OficinaEntity convertToMapEntity(OficinaDto oficina);
 	List<OficinaDto> listAllOficinas();
-	MessageResponseDto<String> addOficina(OficinaDto oficina);
+	MessageResponseDto<Integer> addOficina(OficinaDto oficina);
 	MessageResponseDto<String> editOficina(OficinaDto oficina, Integer id);
 	MessageResponseDto<OficinaDto> getOficinaById(Integer id);
 	

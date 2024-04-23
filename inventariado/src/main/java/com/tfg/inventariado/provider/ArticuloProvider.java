@@ -13,7 +13,7 @@ public interface ArticuloProvider {
 	ArticuloDto convertToMapDto(ArticuloEntity articulo);
 	ArticuloEntity convertToMapEntity(ArticuloDto articulo);
 	List<ArticuloDto> listAllArticulo();
-	MessageResponseDto<String> addArticulo(ArticuloDto articulo);
+	MessageResponseDto<Integer> addArticulo(ArticuloDto articulo);
 	MessageResponseDto<String> editArticulo(ArticuloDto articulo, Integer articuloId);
 	MessageResponseDto<ArticuloDto> getArticuloById(Integer articuloId);
 	MessageResponseDto<List<ArticuloDto>> listArticulosByCategoria(String codigoCategoria);

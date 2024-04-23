@@ -34,7 +34,7 @@ public class PedidoController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarPedido(@RequestBody @Valid PedidoDto pedidoRequest) {
 		
-		MessageResponseDto<String> messageResponse = this.pedidoProvider.addPedido(pedidoRequest);
+		MessageResponseDto<?> messageResponse = this.pedidoProvider.addPedido(pedidoRequest);
 
 		if (messageResponse.isSuccess()) {
 			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);

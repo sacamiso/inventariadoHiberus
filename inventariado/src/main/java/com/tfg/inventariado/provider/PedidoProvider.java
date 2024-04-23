@@ -16,7 +16,7 @@ public interface PedidoProvider {
 	PedidoDto convertToMapDtoVista(PedidoVWEntity pedido);
 	PedidoVWEntity convertToMapEntityVista(PedidoDto pedido);
 	List<PedidoDto> listAllPedidos();
-	MessageResponseDto<String> addPedido(PedidoDto pedido);
+	MessageResponseDto<?> addPedido(PedidoDto pedido);
 	MessageResponseDto<String> editPedido(PedidoDto pedido, Integer id);
 	MessageResponseDto<PedidoDto> getPedidoById(Integer id);
 	

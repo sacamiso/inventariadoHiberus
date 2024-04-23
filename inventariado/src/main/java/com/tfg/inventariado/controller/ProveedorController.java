@@ -34,7 +34,7 @@ public class ProveedorController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarProveedor(@RequestBody @Valid ProveedorDto provedorRequest) {
 		
-		MessageResponseDto<String> messageResponse = this.proveedorProvider.addProveedor(provedorRequest);
+		MessageResponseDto<Integer> messageResponse = this.proveedorProvider.addProveedor(provedorRequest);
 
 		if (messageResponse.isSuccess()) {
 			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);

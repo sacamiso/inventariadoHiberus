@@ -35,7 +35,7 @@ public class SalidaController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarSalida(@RequestBody @Valid SalidaDto salidaRequest) {
 		
-		MessageResponseDto<String> messageResponse = this.salidaProvider.addSalida(salidaRequest);
+		MessageResponseDto<Integer> messageResponse = this.salidaProvider.addSalida(salidaRequest);
 
 		if (messageResponse.isSuccess()) {
 			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);

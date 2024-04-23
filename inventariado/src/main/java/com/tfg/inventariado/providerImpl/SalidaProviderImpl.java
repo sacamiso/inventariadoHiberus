@@ -65,7 +65,7 @@ public class SalidaProviderImpl implements SalidaProvider {
 	//Cuando se añade una salida se modifica el inventario y eso a su vez modifica el historial
 	@Transactional
 	@Override
-	public MessageResponseDto<String> addSalida(SalidaDto salida) {
+	public MessageResponseDto<Integer> addSalida(SalidaDto salida) {
 		if(salida.getNumUnidades()==null) {
 			return MessageResponseDto.fail("El número de unidades es obligatorio");
 		}
@@ -106,7 +106,7 @@ public class SalidaProviderImpl implements SalidaProvider {
 		
 		SalidaEntity newSalida = convertToMapEntity(salida);
 		newSalida = saldiaRepository.save(newSalida);
-		return MessageResponseDto.success("salida añadida con éxito");
+		return MessageResponseDto.success(newSalida.getIdSalida());
 	}
 
 	@Transactional

@@ -47,7 +47,7 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 	}
 
 	@Override
-	public MessageResponseDto<String> addProveedor(ProveedorDto proveedor) {
+	public MessageResponseDto<Integer> addProveedor(ProveedorDto proveedor) {
 		
 		if(proveedor.getCif()==null || !StringUtils.isNotBlank(proveedor.getCif())) {
 			return MessageResponseDto.fail("El CIF es obligatorio");
@@ -75,7 +75,7 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 		}
 		ProveedorEntity newProveedor = convertToMapEntity(proveedor);
 		newProveedor = proveedorRepository.save(newProveedor);
-		return MessageResponseDto.success("Proveedor añadido con éxito");
+		return MessageResponseDto.success(newProveedor.getIdProveedor());
 	}
 
 	@Override

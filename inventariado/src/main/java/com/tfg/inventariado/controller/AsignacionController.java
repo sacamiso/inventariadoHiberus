@@ -34,7 +34,7 @@ public class AsignacionController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarAsignacion(@RequestBody @Valid AsignacionDto asignacionRequest) {
 		
-		MessageResponseDto<String> messageResponse = this.asignacionProvider.addAsignacion(asignacionRequest);
+		MessageResponseDto<Integer> messageResponse = this.asignacionProvider.addAsignacion(asignacionRequest);
 
 		if (messageResponse.isSuccess()) {
 			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);

@@ -47,7 +47,7 @@ public class OficinaProviderImpl implements OficinaProvider {
 	}
 
 	@Override
-	public MessageResponseDto<String> addOficina(OficinaDto oficina) {
+	public MessageResponseDto<Integer> addOficina(OficinaDto oficina) {
 		if(oficina.getDireccion()==null || oficina.getDireccion().isEmpty()) {
 			return MessageResponseDto.fail("La direccion es obligatoria");
 		}
@@ -59,7 +59,7 @@ public class OficinaProviderImpl implements OficinaProvider {
 		}
 		OficinaEntity newOficina = convertToMapEntity(oficina);
 		newOficina = oficinaRepository.save(newOficina);
-		return MessageResponseDto.success("Oficina añadida con éxito");
+		return MessageResponseDto.success(newOficina.getIdOficina());
 	}
 
 	@Override

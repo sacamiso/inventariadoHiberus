@@ -115,12 +115,16 @@ public class InventarioProviderImpl implements InventarioProvider{
 			if(!mesgHistorial.isSuccess()) {
 				return MessageResponseDto.fail(mesgHistorial.getError());
 			}
+			
+			
 			InventarioEntity inventarioToUpdate = optionalInventario.get();
 			
-			this.actualizarCampos(inventarioToUpdate, inventario);
-			
-			inventarioRepository.save(inventarioToUpdate);
-			
+			if(inventario.getStock()<1) {
+				this.inventarioRepository.delete(inventarioToUpdate);;
+			}else {
+				this.actualizarCampos(inventarioToUpdate, inventario);
+				inventarioRepository.save(inventarioToUpdate);
+			}
 			StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
 			
 			return MessageResponseDto.success("Inventario editado con éxito");

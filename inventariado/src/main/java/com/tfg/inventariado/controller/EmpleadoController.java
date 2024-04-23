@@ -34,7 +34,7 @@ public class EmpleadoController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarEmpleado(@RequestBody @Valid EmpleadoDto empleadoRequest) {
 		try {
-			MessageResponseDto<String> messageResponse = empleadoProvider.addEmpleado(empleadoRequest);
+			MessageResponseDto<Integer> messageResponse = empleadoProvider.addEmpleado(empleadoRequest);
 			
 			if( messageResponse.isSuccess()) {
 				return ResponseEntity.status(HttpStatus.OK).body(messageResponse);

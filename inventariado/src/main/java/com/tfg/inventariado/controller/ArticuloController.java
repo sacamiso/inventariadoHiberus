@@ -34,7 +34,7 @@ public class ArticuloController {
 	@PostMapping("/add")
 	public ResponseEntity<MessageResponseDto<?>> agregarArticulo(@RequestBody @Valid ArticuloDto articuloRequest) {
 		try {
-			MessageResponseDto<String> messageResponse = articuloProvider.addArticulo(articuloRequest);
+			MessageResponseDto<Integer> messageResponse = articuloProvider.addArticulo(articuloRequest);
 			if (messageResponse.isSuccess()) {
 				return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
 			} else {
