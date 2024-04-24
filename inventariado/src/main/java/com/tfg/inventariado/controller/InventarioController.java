@@ -1,5 +1,6 @@
 package com.tfg.inventariado.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -100,6 +101,15 @@ public class InventarioController {
 		}else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(MessageResponseDto.fail(listaDto.getError()));
+		}
+	}
+	
+	@PostMapping("/descargarExcel")
+	public byte[] descargarExcelInventario(@RequestBody InventarioFilterDto filtros)throws IOException{
+		try {
+			return this.inventarioProvider.descargarExcelInventario(filtros);
+		} catch (IOException e) {
+			throw e;
 		}
 	}
 }

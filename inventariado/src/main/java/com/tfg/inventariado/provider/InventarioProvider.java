@@ -1,5 +1,6 @@
 package com.tfg.inventariado.provider;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.tfg.inventariado.dto.InventarioDto;
@@ -23,4 +24,6 @@ public interface InventarioProvider {
 	boolean inventarioExisteByID(Integer idOf, Integer idArt);
 	
 	MessageResponseListDto<List<InventarioDto>> listAllInventariosSkipLimit(Integer page, Integer size, InventarioFilterDto filtros);
+	
+	byte[] descargarExcelInventario(InventarioFilterDto filtros) throws IOException;
 }

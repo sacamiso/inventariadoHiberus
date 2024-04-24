@@ -1,10 +1,23 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -236,5 +249,106 @@ public class InventarioProviderImpl implements InventarioProvider{
 		return false;
 		
     }
+
+	@Override
+	public byte[] descargarExcelInventario(InventarioFilterDto filtros) throws IOException {
+		
+		Specification<InventarioEntity> spec = Specification.where(null);
+		
+		if (filtros != null) {
+			if (filtros.getIdOficina()!= null && filtros.getIdOficina()!= 0) {
+	            Integer idOficina = filtros.getIdOficina();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOficina));
+	        }
+			if (filtros.getCodArticulo()!= null && filtros.getCodArticulo()!= 0) {
+	            Integer codArticulo = filtros.getCodArticulo();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("codArticulo"), codArticulo));
+	        }
+			if (filtros.getStockMin() != null) {
+	            Integer stockMin = filtros.getStockMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("stock"), stockMin));
+	        }
+	        if (filtros.getStockMax() != null) {
+	            Integer stockMax = filtros.getStockMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("stock"), stockMax));
+	        }
+		}
+		
+		Sort sort = Sort.by("idOficina", "articulo.referencia");
+		List<InventarioEntity> listaInventarioEntity = inventarioRepository.findAll(spec, sort);
+
+		
+		
+		
+		XSSFWorkbook workbook = new XSSFWorkbook();
+		XSSFSheet hoja = workbook.createSheet("Informe");
+		
+		XSSFCellStyle headerStyle = headerStyle(workbook);
+		
+		String[] encabezados = {"Identificador oficina", "Referencia artículo", "Stock", "Dirección oficina", "Descripción artículo", "Categoría artículo", "Subcategoría Artículo", "Precio artículo (€)", "IVA artículo (%)", "Fabricante artículo", "Modelo artículo"};
+		
+		int indiceFila = 0;
+		
+		XSSFRow fila = hoja.createRow(indiceFila); 
+		
+		for (int i = 0; i < encabezados.length; i++) {
+            String encabezado = encabezados[i];
+            XSSFCell celda = fila.createCell(i);
+            celda.setCellValue(encabezado);
+            celda.setCellStyle(headerStyle);
+        }
+		
+		HashMap<String, XSSFCellStyle> styles = new HashMap<>();
+		styles.put("HEADER", headerStyle);
+		
+		XSSFCellStyle cellStyle = workbook.createCellStyle();
+	    cellStyle.setAlignment(HorizontalAlignment.CENTER);
+	    cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		
+		indiceFila++;
+        for (InventarioEntity inventario : listaInventarioEntity) {
+            fila = hoja.createRow(indiceFila);
+            fila.createCell(0).setCellValue(inventario.getIdOficina());
+            fila.createCell(1).setCellValue(inventario.getArticulo().getReferencia());
+            fila.createCell(2).setCellValue(inventario.getStock());
+            String dirOficina = inventario.getOficina().getDireccion() +", " + inventario.getOficina().getCodigoPostal() +", " + inventario.getOficina().getLocalidad() +", " + inventario.getOficina().getPais();
+            fila.createCell(3).setCellValue(dirOficina);
+            fila.createCell(4).setCellValue(inventario.getArticulo().getDescripcion());
+            fila.createCell(5).setCellValue(inventario.getArticulo().getCodCategoria());
+            fila.createCell(6).setCellValue(inventario.getArticulo().getCodSubcategoria());
+            fila.createCell(7).setCellValue(inventario.getArticulo().getPrecioUnitario());
+            fila.createCell(8).setCellValue(inventario.getArticulo().getIva());
+            fila.createCell(9).setCellValue(inventario.getArticulo().getFabricante());
+            fila.createCell(10).setCellValue(inventario.getArticulo().getModelo());
+            indiceFila++;
+        }
+        
+        for (int i = 0; i < encabezados.length; i++) {
+            hoja.autoSizeColumn(i);
+            hoja.setDefaultColumnStyle(i, cellStyle);
+        }
+        
+        // Convertir el workbook a bytes
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        byte[] bytes = outputStream.toByteArray();
+        outputStream.close();
+        workbook.close();
+        
+        return bytes;
+	}
+	
+	XSSFCellStyle headerStyle(XSSFWorkbook workbook) {
+		XSSFCellStyle headerStyle = workbook.createCellStyle();
+		headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
+		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		XSSFFont headerFont = workbook.createFont();
+		headerFont.setColor(IndexedColors.WHITE.getIndex());
+		headerFont.setBold(true);
+		headerStyle.setFont(headerFont);
+		return headerStyle;
+	}
 
 }
