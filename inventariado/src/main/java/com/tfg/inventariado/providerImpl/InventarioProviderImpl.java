@@ -277,11 +277,8 @@ public class InventarioProviderImpl implements InventarioProvider{
 		Sort sort = Sort.by("idOficina", "articulo.referencia");
 		List<InventarioEntity> listaInventarioEntity = inventarioRepository.findAll(spec, sort);
 
-		
-		
-		
 		XSSFWorkbook workbook = new XSSFWorkbook();
-		XSSFSheet hoja = workbook.createSheet("Informe");
+		XSSFSheet hoja = workbook.createSheet("Inventario");
 		
 		XSSFCellStyle headerStyle = headerStyle(workbook);
 		

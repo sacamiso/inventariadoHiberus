@@ -1,5 +1,6 @@
 package com.tfg.inventariado.controller;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -102,6 +103,16 @@ public class HistorialInventarioController {
 		}else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(MessageResponseDto.fail(listaDto.getError()));
+		}
+	}
+	
+	
+	@PostMapping("/descargarExcel")
+	public byte[] descargarExcelHistorialInventario(@RequestBody HistorialInventarioFilterDto filtros)throws IOException{
+		try {
+			return this.historialProvider.descargarExcelHistorialInventario(filtros);
+		} catch (IOException e) {
+			throw e;
 		}
 	}
 }

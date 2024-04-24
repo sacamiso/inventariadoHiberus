@@ -17,5 +17,7 @@ public class HistorialInventarioFilterDto {
 	private Integer stockMin;
 	private Integer stockMax;
 	private LocalDate fecha;
+	private LocalDate fechaInicioIntervalo;
+	private LocalDate fechaFinIntervalo;
 	
 }

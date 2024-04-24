@@ -1,5 +1,6 @@
 package com.tfg.inventariado.provider;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,4 +25,6 @@ public interface HistorialInventarioProvider {
 	boolean inventarioExisteByID(Integer idOf, Integer idArt, LocalDateTime fecha);
 	
 	MessageResponseListDto<List<HistorialInventarioDto>> listAllHistorialSkipLimit(Integer page, Integer size, HistorialInventarioFilterDto filtros);
+	
+	byte[] descargarExcelHistorialInventario(HistorialInventarioFilterDto filtros) throws IOException;
 }
