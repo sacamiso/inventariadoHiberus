@@ -1,4 +1,4 @@
-package com.tfg.inventariado.configModelMapper;
+package com.tfg.inventariado.configuracion;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

@@ -1,4 +1,4 @@
-package com.tfg.inventariado.configModelMapper;
+package com.tfg.inventariado.configuracion;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

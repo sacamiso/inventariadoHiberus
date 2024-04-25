@@ -1,4 +1,4 @@
-package com.tfg.inventariado.configModelMapper;
+package com.tfg.inventariado.configuracion;
 
 import java.time.LocalDate;
 import org.springframework.core.convert.converter.Converter;
