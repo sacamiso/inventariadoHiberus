@@ -33,4 +33,8 @@ public class PedidoFilterDto {
 	private Double costeUnitarioMax;
 	
 	private Boolean devuelto;
+	
+	//Los siguientes dos se aplicarán sobre fecha pedido
+	private LocalDate fechaInicioIntervalo;
+	private LocalDate fechaFinIntervalo;
 }

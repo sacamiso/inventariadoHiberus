@@ -1,5 +1,6 @@
 package com.tfg.inventariado.provider;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
@@ -29,4 +30,7 @@ public interface PedidoProvider {
 	MessageResponseDto<String> marcarRecibido(Integer id);
 	
 	MessageResponseDto<String> devolverPedido(Integer id);
+	byte[] descargarExcelPedido(PedidoFilterDto filtros) throws IOException;
+	
+	byte[] descargarExcelPedidoById(Integer id) throws IOException;
 }

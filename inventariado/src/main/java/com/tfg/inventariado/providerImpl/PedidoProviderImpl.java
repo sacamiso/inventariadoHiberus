@@ -1,10 +1,25 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tfg.inventariado.dto.ArticuloDto;
+import com.tfg.inventariado.dto.EmpleadoDto;
 import com.tfg.inventariado.dto.InventarioDto;
 import com.tfg.inventariado.dto.LineaDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
@@ -22,6 +38,7 @@ import com.tfg.inventariado.dto.MessageResponseListDto;
 import com.tfg.inventariado.dto.OficinaDto;
 import com.tfg.inventariado.dto.PedidoDto;
 import com.tfg.inventariado.dto.PedidoFilterDto;
+import com.tfg.inventariado.dto.ProveedorDto;
 import com.tfg.inventariado.entity.PedidoEntity;
 import com.tfg.inventariado.entity.PedidoVWEntity;
 import com.tfg.inventariado.provider.ArticuloProvider;
@@ -403,6 +420,14 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 				        cb.lessThanOrEqualTo(root.get("costeUnitario"), costeUnMax)
 				    ));
 			}
+			if (filtros.getFechaInicioIntervalo() != null) {
+	            LocalDate fechaInicioIntervalo = filtros.getFechaInicioIntervalo();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("fechaPedido"), fechaInicioIntervalo));
+	        }
+	        if (filtros.getFechaFinIntervalo() != null) {
+	            LocalDate fechaFinIntervalo = filtros.getFechaFinIntervalo();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("fechaPedido"), fechaFinIntervalo));
+	        }
 		}
 		
 		PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaPedido"));
@@ -506,6 +531,386 @@ private void actualizarCampos(PedidoEntity pedido, PedidoDto pedidoToUpdate) {
 		}else {
 			return MessageResponseDto.fail("El pedido que se desea devolver no existe");
 		}
+	}
+
+	@Override
+	public byte[] descargarExcelPedido(PedidoFilterDto filtros) throws IOException {
+		Specification<PedidoVWEntity> spec = Specification.where(null);
+		
+		if (filtros != null) {
+			if (filtros.getFechaPedido() != null) {
+				LocalDate fechaPedido = filtros.getFechaPedido();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("fechaPedido"), fechaPedido));
+	        }
+			if (filtros.getIvaPedidoMin() != null) {
+				Double ivaMin = filtros.getIvaPedidoMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("ivaPedido"), ivaMin));
+			}
+			if (filtros.getIvaPedidoMax() != null) {
+				Double ivaMax = filtros.getIvaPedidoMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("ivaPedido"), ivaMax));
+			}
+			if (filtros.getCosteTotalMin() != null) {
+				Double cosTotMin = filtros.getCosteTotalMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costeTotal"), cosTotMin));
+			}
+			if (filtros.getCosteTotalMax() != null) {
+				Double cosTotMax = filtros.getCosteTotalMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("costeTotal"), cosTotMax));
+			}
+			if (filtros.getIdEmpleado()!= null && filtros.getIdEmpleado()!= 0) {
+	            Integer idEmpleado = filtros.getIdEmpleado();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idEmpleado"), idEmpleado));
+	        }
+			if (filtros.getPlazoEntregaMin() != null) {
+				Integer plazoMin = filtros.getPlazoEntregaMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("plazoEntrega"), plazoMin));
+			}
+			if (filtros.getPlazoEntregaMax() != null) {
+				Integer plazoMax = filtros.getPlazoEntregaMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("plazoEntrega"), plazoMax));
+			}
+			if (filtros.getCostesEnvioMin() != null) {
+				Double costesMin = filtros.getCostesEnvioMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costesEnvio"), costesMin));
+			}
+			if (filtros.getCostesEnvioMax() != null) {
+				Double costesMax = filtros.getCostesEnvioMax();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("costesEnvio"), costesMax));
+			}
+			if (filtros.getIdProveedor()!= null && filtros.getIdProveedor()!= 0) {
+	            Integer idProveedor = filtros.getIdProveedor();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idProveedor"), idProveedor));
+	        }
+			if (filtros.getIdOficina()!= null && filtros.getIdOficina()!= 0) {
+	            Integer idOficina = filtros.getIdOficina();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("idOficina"), idOficina));
+	        }
+			if (filtros.getFechaRecepcion() != null) {
+				LocalDate fechaRecepcion = filtros.getFechaRecepcion();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("fechaRecepcion"), fechaRecepcion));
+	        }
+			if (filtros.getCodigoCondicionPago()!= null && !filtros.getCodigoCondicionPago().isEmpty()) {
+	            String codigoCondicion = filtros.getCodigoCondicionPago();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("condicionPago"), codigoCondicion));
+	        }
+			if (filtros.getCodigoMedioPago()!= null && !filtros.getCodigoMedioPago().isEmpty()) {
+	            String codigoMedio = filtros.getCodigoMedioPago();
+	            spec = spec.and((root, query, cb) -> cb.equal(root.get("medioPago"), codigoMedio));
+	        }
+			if (filtros.getRecibido() != null) {
+	            if (filtros.getRecibido()) {
+	                spec = spec.and((root, query, cb) -> cb.isNotNull(root.get("fechaRecepcion")));
+	            } else {
+	                spec = spec.and((root, query, cb) -> cb.isNull(root.get("fechaRecepcion")));
+	            }
+	        }
+			if (filtros.getDevuelto() != null) {
+	            if (filtros.getDevuelto()) {
+	                spec = spec.and((root, query, cb) -> cb.isTrue(root.get("devuelto")));
+	            } else {
+	                spec = spec.and((root, query, cb) -> cb.isFalse(root.get("devuelto")));
+	            }
+	        }
+			if (filtros.getCosteUnitarioMin() != null && filtros.getCosteUnitarioMin() != 0) {
+				Double costeUnMin = filtros.getCosteUnitarioMin();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("costeUnitario"), costeUnMin));
+			}
+			if (filtros.getCosteUnitarioMax() != null && filtros.getCosteUnitarioMax() != 0) {
+				Double costeUnMax = filtros.getCosteUnitarioMax();
+				spec = spec.and((root, query, cb) -> cb.or(
+				        cb.isNull(root.get("costeUnitario")),
+				        cb.lessThanOrEqualTo(root.get("costeUnitario"), costeUnMax)
+				    ));
+			}
+			if (filtros.getFechaInicioIntervalo() != null) {
+	            LocalDate fechaInicioIntervalo = filtros.getFechaInicioIntervalo();
+	            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("fechaPedido"), fechaInicioIntervalo));
+	        }
+	        if (filtros.getFechaFinIntervalo() != null) {
+	            LocalDate fechaFinIntervalo = filtros.getFechaFinIntervalo();
+	            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("fechaPedido"), fechaFinIntervalo));
+	        }
+		}
+		
+		Sort sort = Sort.by(Sort.Direction.DESC, "fechaPedido");
+		List<PedidoVWEntity> listaPedidoEntity = this.pedidoVistaRepository.findAll(spec,sort);
+		
+		XSSFWorkbook workbook = new XSSFWorkbook();
+		XSSFSheet hoja = workbook.createSheet("Pedidos");
+		
+		XSSFCellStyle headerStyle = headerStyle(workbook);
+		
+		String[] encabezados = { "Fecha de pedido", "Fecha de recepción", "IVA (%)", "Coste total (€)",
+				"Número de unidades", "Coste unitario (€)", "Plazo de entrega", "Costes de envío (€)",
+				"Condición de pago", "Medio de pago", "Devuelto", "Realizado por", "Oficina de recepción",
+				"Proveedor"};
+
+		int indiceFila = 0;
+		XSSFRow fila = hoja.createRow(indiceFila); 
+		
+		for (int i = 0; i < encabezados.length; i++) {
+            String encabezado = encabezados[i];
+            XSSFCell celda = fila.createCell(i);
+            celda.setCellValue(encabezado);
+            celda.setCellStyle(headerStyle);
+        }
+		
+		HashMap<String, XSSFCellStyle> styles = new HashMap<>();
+		styles.put("HEADER", headerStyle);
+		
+		XSSFCellStyle cellStyle = workbook.createCellStyle();
+	    cellStyle.setAlignment(HorizontalAlignment.CENTER);
+	    cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+	    
+	    //Formato de fecha
+	    CreationHelper creationHelper = workbook.getCreationHelper();
+	    CellStyle dateCellStyle = workbook.createCellStyle();
+	    dateCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/mm/yyyy"));
+		
+	    EmpleadoDto empleado ;
+    	OficinaDto oficina;
+    	ProveedorDto proveedor ;
+    	
+		indiceFila++;
+        for (PedidoVWEntity pedido : listaPedidoEntity) {
+        	
+        	empleado = this.empleadoProvider.getEmpleadoById(pedido.getIdEmpleado()).getMessage();
+        	oficina = this.oficinaProvider.getOficinaById(pedido.getIdOficina()).getMessage();
+        	proveedor = this.proveedorProvider.getProveedorById(pedido.getIdProveedor()).getMessage();
+        	
+            fila = hoja.createRow(indiceFila);
+            
+            fila.createCell(0).setCellValue(pedido.getFechaPedido());
+            fila.getCell(0).setCellStyle(dateCellStyle);
+            
+            if(pedido.getFechaRecepcion()!=null) {
+            	fila.createCell(1).setCellValue(pedido.getFechaRecepcion());
+                fila.getCell(1).setCellStyle(dateCellStyle);
+            }else {
+            	fila.createCell(1).setCellValue("-");
+            }
+            fila.createCell(2).setCellValue(pedido.getIvaPedido());
+            fila.createCell(3).setCellValue(pedido.getCosteTotal());
+            
+            if(pedido.getNumeroUnidades()!=null) {
+            	fila.createCell(4).setCellValue(pedido.getNumeroUnidades());
+            }else {
+            	fila.createCell(4).setCellValue("-");
+            }
+       
+            if(pedido.getCosteUnitario()!=null) {
+            	fila.createCell(5).setCellValue(String.format("%.2f", pedido.getCosteUnitario()));
+            }else {
+            	fila.createCell(5).setCellValue("-");
+            }
+            
+            fila.createCell(6).setCellValue(pedido.getPlazoEntrega());
+            fila.createCell(7).setCellValue(pedido.getCostesEnvio());
+            fila.createCell(8).setCellValue(pedido.getCondicionPago());
+            fila.createCell(9).setCellValue(pedido.getMedioPago());
+            
+            if(pedido.getDevuelto()!=null && pedido.getDevuelto()==true) {
+            	fila.createCell(10).setCellValue("SI");
+            }else {
+            	fila.createCell(10).setCellValue("NO");
+            }
+            
+            String nomEm = empleado.getDni() + ": " + empleado.getNombre() + " " + empleado.getApellidos(); 
+            fila.createCell(11).setCellValue(nomEm);
+            
+            
+            String dirOficina = oficina.getDireccion() +", " + oficina.getCodigoPostal() +", " + oficina.getLocalidad() +", " + oficina.getPais();
+            fila.createCell(12).setCellValue(dirOficina);
+            
+            String prov = proveedor.getRazonSocial()+": "+proveedor.getCif();
+            fila.createCell(13).setCellValue(prov);
+            indiceFila++;
+        }
+        
+        for (int i = 0; i < encabezados.length; i++) {
+            hoja.autoSizeColumn(i);
+            hoja.setDefaultColumnStyle(i, cellStyle);
+        }
+        
+        // Convertir el workbook a bytes
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        byte[] bytes = outputStream.toByteArray();
+        outputStream.close();
+        workbook.close();
+        
+        return bytes;
+	}
+	
+	XSSFCellStyle headerStyle(XSSFWorkbook workbook) {
+		XSSFCellStyle headerStyle = workbook.createCellStyle();
+		headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
+		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		XSSFFont headerFont = workbook.createFont();
+		headerFont.setColor(IndexedColors.WHITE.getIndex());
+		headerFont.setBold(true);
+		headerStyle.setFont(headerFont);
+		return headerStyle;
+	}
+
+	@Override
+	public byte[] descargarExcelPedidoById(Integer id) throws IOException {
+		
+		MessageResponseDto<PedidoDto> pedidoMSG = this.getPedidoById(id);
+		if(!pedidoMSG.isSuccess()) {
+            throw new IOException("No se ha encontrado el pedido");
+		}
+		PedidoDto pedido = pedidoMSG.getMessage();
+		
+		XSSFWorkbook workbook = new XSSFWorkbook();
+		XSSFSheet hoja = workbook.createSheet("Pedido "+id);
+		
+		XSSFCellStyle headerStyle = headerStyle(workbook);
+		
+		String[] encabezados = { "Fecha de pedido", "Fecha de recepción", "IVA (%)", "Coste total (€)",
+				"Número de unidades", "Coste unitario (€)", "Plazo de entrega", "Costes de envío (€)",
+				"Condición de pago", "Medio de pago", "Devuelto", "Realizado por", "Oficina de recepción",
+				"Proveedor"};
+
+		int indiceFila = 0;
+		XSSFRow fila = hoja.createRow(indiceFila); 
+		
+		for (int i = 0; i < encabezados.length; i++) {
+            String encabezado = encabezados[i];
+            XSSFCell celda = fila.createCell(i);
+            celda.setCellValue(encabezado);
+            celda.setCellStyle(headerStyle);
+        }
+		
+		HashMap<String, XSSFCellStyle> styles = new HashMap<>();
+		styles.put("HEADER", headerStyle);
+		
+		XSSFCellStyle cellStyle = workbook.createCellStyle();
+	    cellStyle.setAlignment(HorizontalAlignment.CENTER);
+	    cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+	    
+	    //Formato de fecha
+	    CreationHelper creationHelper = workbook.getCreationHelper();
+	    CellStyle dateCellStyle = workbook.createCellStyle();
+	    dateCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/mm/yyyy"));
+	    
+	    indiceFila++;
+	    
+	    fila = hoja.createRow(indiceFila);
+        
+        fila.createCell(0).setCellValue(pedido.getFechaPedido());
+        fila.getCell(0).setCellStyle(dateCellStyle);
+        
+        if(pedido.getFechaRecepcion()!=null) {
+        	fila.createCell(1).setCellValue(pedido.getFechaRecepcion());
+            fila.getCell(1).setCellStyle(dateCellStyle);
+        }else {
+        	fila.createCell(1).setCellValue("-");
+        }
+        fila.createCell(2).setCellValue(pedido.getIvaPedido());
+        fila.createCell(3).setCellValue(pedido.getCosteTotal());
+        
+        if(pedido.getNumeroUnidades()!=null) {
+        	fila.createCell(4).setCellValue(pedido.getNumeroUnidades());
+        }else {
+        	fila.createCell(4).setCellValue("-");
+        }
+   
+        if(pedido.getCosteUnitario()!=null) {
+        	fila.createCell(5).setCellValue(String.format("%.2f", pedido.getCosteUnitario()));
+        }else {
+        	fila.createCell(5).setCellValue("-");
+        }
+        
+        fila.createCell(6).setCellValue(pedido.getPlazoEntrega());
+        fila.createCell(7).setCellValue(pedido.getCostesEnvio());
+        fila.createCell(8).setCellValue(pedido.getCondicionPago());
+        fila.createCell(9).setCellValue(pedido.getMedioPago());
+        
+        if(pedido.getDevuelto()!=null && pedido.getDevuelto()==true) {
+        	fila.createCell(10).setCellValue("SI");
+        }else {
+        	fila.createCell(10).setCellValue("NO");
+        }
+        
+        String nomEm = pedido.getEmpleado().getDni() + ": " + pedido.getEmpleado().getNombre() + " " + pedido.getEmpleado().getApellidos(); 
+        fila.createCell(11).setCellValue(nomEm);
+        
+        
+        String dirOficina = pedido.getOficina().getDireccion() +", " + pedido.getOficina().getCodigoPostal() +", " + pedido.getOficina().getLocalidad() +", " + pedido.getOficina().getPais();
+        fila.createCell(12).setCellValue(dirOficina);
+        
+        String prov = pedido.getProveedor().getRazonSocial()+": "+pedido.getProveedor().getCif();
+        fila.createCell(13).setCellValue(prov);
+        
+        indiceFila++;
+        indiceFila++;
+        
+        String[] encabezadosLinea = { "Número de línea", "Número de unidades", "Precio de línea (€)", "Descuento (%)",
+				"Referencia artículo", "Descripción artículo", "Precio artículo (€)", "IVA artículo (%)", "Categoría",
+				"Subcategoría", "Fabricante", "Modelo"};
+
+		fila = hoja.createRow(indiceFila); 
+		XSSFCellStyle headerStyleLinea = headerStyleLinea(workbook);
+		
+		for (int i = 0; i < encabezadosLinea.length; i++) {
+            String encabezadoL = encabezadosLinea[i];
+            XSSFCell celda = fila.createCell(i);
+            celda.setCellValue(encabezadoL);
+            celda.setCellStyle(headerStyleLinea);
+        }
+
+		indiceFila++;
+		
+        for (LineaDto linea : pedido.getLineas()) {
+        	
+            fila = hoja.createRow(indiceFila);
+            
+            fila.createCell(0).setCellValue(linea.getNumeroLinea());
+            fila.createCell(1).setCellValue(linea.getNumeroUnidades());
+            fila.createCell(2).setCellValue(linea.getPrecioLinea());
+            fila.createCell(3).setCellValue(linea.getDescuento());
+            fila.createCell(4).setCellValue(linea.getArticulo().getReferencia());
+            fila.createCell(5).setCellValue(linea.getArticulo().getDescripcion());
+            fila.createCell(6).setCellValue(linea.getArticulo().getPrecioUnitario());
+            fila.createCell(7).setCellValue(linea.getArticulo().getIva());
+            fila.createCell(8).setCellValue(linea.getArticulo().getCodCategoria());
+            fila.createCell(9).setCellValue(linea.getArticulo().getCodSubcategoria());
+            fila.createCell(10).setCellValue(linea.getArticulo().getFabricante());
+            fila.createCell(11).setCellValue(linea.getArticulo().getModelo());
+
+            indiceFila++;
+        }
+        
+        for (int i = 0; i < encabezados.length; i++) {
+            hoja.autoSizeColumn(i);
+            hoja.setDefaultColumnStyle(i, cellStyle);
+        }
+        
+        // Convertir el workbook a bytes
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        byte[] bytes = outputStream.toByteArray();
+        outputStream.close();
+        workbook.close();
+        
+        return bytes;
+	}
+	
+	XSSFCellStyle headerStyleLinea(XSSFWorkbook workbook) {
+		XSSFCellStyle headerStyle = workbook.createCellStyle();
+		headerStyle.setFillForegroundColor(IndexedColors.SKY_BLUE.getIndex());
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
+		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		XSSFFont headerFont = workbook.createFont();
+		headerFont.setColor(IndexedColors.BLACK.getIndex());
+		headerFont.setBold(true);
+		headerStyle.setFont(headerFont);
+		return headerStyle;
 	}
 
 }

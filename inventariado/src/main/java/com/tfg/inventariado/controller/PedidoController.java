@@ -1,5 +1,6 @@
 package com.tfg.inventariado.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -122,6 +123,24 @@ public class PedidoController {
 		}else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(MessageResponseDto.fail(listaPedidoDto.getError()));
+		}
+	}
+	
+	@PostMapping("/descargarExcel")
+	public byte[] descargarExcelSalida(@RequestBody PedidoFilterDto filtros)throws IOException{
+		try {
+			return this.pedidoProvider.descargarExcelPedido(filtros);
+		} catch (IOException e) {
+			throw e;
+		}
+	}
+	
+	@PostMapping("/descargarExcelById")
+	public byte[] descargarExcelSalida(@RequestParam(value = "id", required = true) Integer id)throws IOException{
+		try {
+			return this.pedidoProvider.descargarExcelPedidoById(id);
+		} catch (IOException e) {
+			throw e;
 		}
 	}
 }
