@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -19,4 +20,5 @@ public interface SalidaRepository extends JpaRepository<SalidaEntity, Integer> {
 	Page<SalidaEntity> findAll(Specification<SalidaEntity> spec,Pageable pageable);
 	long count(Specification<SalidaEntity> spec);
 
+	List<SalidaEntity> findAll(Specification<SalidaEntity> spec, Sort sort);
 }

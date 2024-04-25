@@ -20,4 +20,6 @@ public class SalidaFilterDto {
 	private LocalDate fechaSalida;
 	private Integer idOficina;
 	private Integer codArticulo;
+	private LocalDate fechaInicioIntervalo;
+	private LocalDate fechaFinIntervalo;
 }

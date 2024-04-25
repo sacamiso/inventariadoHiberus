@@ -1,5 +1,6 @@
 package com.tfg.inventariado.provider;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
@@ -23,5 +24,7 @@ public interface SalidaProvider {
 	boolean salidaExisteByID(Integer id);
 	
 	MessageResponseListDto<List<SalidaDto>> listAllSalidasSkipLimit(Integer page, Integer size, SalidaFilterDto filtros);
+	
+	byte[] descargarExcelSalida(SalidaFilterDto filtros) throws IOException;
 
 }
