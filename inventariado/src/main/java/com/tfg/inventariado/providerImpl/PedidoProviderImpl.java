@@ -938,7 +938,8 @@ public class PedidoProviderImpl implements PedidoProvider {
 	}
 
 	@Override
-	public void generarPDFById(Integer id) {
+	public byte[] generarPDFById(Integer id) {
+		byte[] pdfBytes = null; 
 		try {
 			// Cargo el archivo compilado JasperReport
 			JasperReport jasperReport = (JasperReport) JRLoader
@@ -1007,15 +1008,18 @@ public class PedidoProviderImpl implements PedidoProvider {
 			// Llenar el informe con datos y parámetros
 			JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, new JREmptyDataSource());
 
-			// Exportar el informe a un archivo PDF
-			JasperExportManager.exportReportToPdfFile(jasperPrint, "reportPedido.pdf");
+			// Exportar el informe a un archivo PDF y descargar
+			//JasperExportManager.exportReportToPdfFile(jasperPrint, "reportPedido.pdf");
 			
+			// Exportar el informe a un array de bytes
+	        pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
 			
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+		return pdfBytes;
 	}
 
 }

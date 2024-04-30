@@ -145,7 +145,7 @@ public class PedidoController {
 	}
 	
 	@PostMapping("/reporteJasperById")
-	public void reporteJasperPedido(@RequestParam(value = "id", required = true) Integer id) {
-		this.pedidoProvider.generarPDFById(id);
+	public byte[] reporteJasperPedido(@RequestParam(value = "id", required = true) Integer id) {
+		return this.pedidoProvider.generarPDFById(id);
 	}
 }
