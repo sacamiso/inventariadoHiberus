@@ -33,4 +33,6 @@ public interface PedidoProvider {
 	byte[] descargarExcelPedido(PedidoFilterDto filtros) throws IOException;
 	
 	byte[] descargarExcelPedidoById(Integer id) throws IOException;
+	
+	void generarPDFById(Integer id);
 }
