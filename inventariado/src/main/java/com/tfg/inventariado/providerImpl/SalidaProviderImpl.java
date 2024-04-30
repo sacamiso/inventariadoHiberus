@@ -378,7 +378,7 @@ public class SalidaProviderImpl implements SalidaProvider {
             fila.createCell(2).setCellValue(salida.getCosteTotal());
             fila.createCell(3).setCellValue(salida.getCosteUnitario());
             
-            String dirOficina = salida.getOficina().getDireccion() +", " + salida.getOficina().getCodigoPostal() +", " + salida.getOficina().getLocalidad() +", " + salida.getOficina().getPais();
+            String dirOficina = salida.getOficina().getDireccion() +", " + salida.getOficina().getLocalidad() +", " + salida.getOficina().getPais();
             fila.createCell(4).setCellValue(dirOficina);
             
             fila.createCell(5).setCellValue(salida.getArticulo().getReferencia());
@@ -420,4 +420,154 @@ public class SalidaProviderImpl implements SalidaProvider {
 		return headerStyle;
 	}
 
+	@Override
+	public byte[] descargarExcelSalidaById(Integer id) throws IOException {
+		
+		MessageResponseDto<SalidaDto> salidaMSG = this.getSalidaById(id);
+		if(!salidaMSG.isSuccess()) {
+			throw new IOException("No se ha encontrado la salida");
+		}
+		SalidaDto salida = salidaMSG.getMessage();
+		
+		XSSFWorkbook workbook = new XSSFWorkbook();
+		XSSFSheet hoja = workbook.createSheet("Salida " + id);
+		
+		XSSFCellStyle headerStyle = headerStyle(workbook);
+		
+		String[] encabezados = { "Número de salida", "Fecha de salida", "Número de unidades", "Coste unitario (PMP-€)",
+				"Coste total"};
+		
+		int indiceFila = 1;
+		XSSFRow fila = hoja.createRow(indiceFila);
+		
+		for (int i = 0; i < encabezados.length; i++) {
+			String encabezado = encabezados[i];
+			XSSFCell celda = fila.createCell(i);
+			celda.setCellValue(encabezado);
+			celda.setCellStyle(headerStyle);
+		}
+		
+		HashMap<String, XSSFCellStyle> styles = new HashMap<>();
+		styles.put("HEADER", headerStyle);
+
+		XSSFCellStyle cellStyle = workbook.createCellStyle();
+		cellStyle.setAlignment(HorizontalAlignment.CENTER);
+		cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		
+		// Formato de fecha
+		CreationHelper creationHelper = workbook.getCreationHelper();
+		CellStyle dateCellStyle = workbook.createCellStyle();
+		dateCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/mm/yyyy"));
+		
+		indiceFila++;
+		
+		fila = hoja.createRow(indiceFila);
+		
+		fila.createCell(0).setCellValue(salida.getIdSalida());
+		
+		fila.createCell(1).setCellValue(salida.getFechaSalida());
+		fila.getCell(1).setCellStyle(dateCellStyle);
+		
+		fila.createCell(2).setCellValue(salida.getNumUnidades());
+		fila.createCell(3).setCellValue(salida.getCosteUnitario());
+		fila.createCell(4).setCellValue(salida.getCosteTotal());
+		
+		indiceFila++;
+		indiceFila++;
+		
+		String[] encabezadosArtículo = { "Referencia", "Descripción", "Precio (€)", "IVA (%)", "Categoría",
+				"Subcategoría", "Fabricante", "Modelo" };
+		
+		fila = hoja.createRow(indiceFila);
+		XSSFCell celda = fila.createCell(0);
+		celda.setCellValue("ARTÍCULO");
+		celda.setCellStyle(headerStyle);
+		indiceFila++;
+		indiceFila++;
+		
+		XSSFCellStyle headerStyleLinea = headerStyleLinea(workbook);
+		fila = hoja.createRow(indiceFila);
+		for (int i = 0; i < encabezadosArtículo.length; i++) {
+			String encabezadoL = encabezadosArtículo[i];
+			XSSFCell celda1 = fila.createCell(i);
+			celda1.setCellValue(encabezadoL);
+			celda1.setCellStyle(headerStyleLinea);
+		}
+		indiceFila++;
+		fila = hoja.createRow(indiceFila);
+		fila.createCell(0).setCellValue(salida.getArticulo().getReferencia());
+        fila.createCell(1).setCellValue(salida.getArticulo().getDescripcion());
+        fila.createCell(2).setCellValue(salida.getArticulo().getPrecioUnitario());
+        fila.createCell(3).setCellValue(salida.getArticulo().getIva());
+        fila.createCell(4).setCellValue(salida.getArticulo().getCodCategoria());
+        fila.createCell(5).setCellValue(salida.getArticulo().getCodSubcategoria());
+        fila.createCell(6).setCellValue(salida.getArticulo().getFabricante());
+        fila.createCell(7).setCellValue(salida.getArticulo().getModelo());
+        
+        indiceFila++;
+		indiceFila++;
+		
+		String[] encabezadosOficina = { "Dirección", "Localidad", "Provincia", "País", "Código postal"};
+		
+		fila = hoja.createRow(indiceFila);
+		XSSFCell celda3 = fila.createCell(0);
+		celda3.setCellValue("OFICINA DE SALIDA");
+		celda3.setCellStyle(headerStyle);
+		indiceFila++;
+		indiceFila++;
+		
+		fila = hoja.createRow(indiceFila);
+		for (int i = 0; i < encabezadosOficina.length; i++) {
+			String encabezadoL = encabezadosOficina[i];
+			XSSFCell celda1 = fila.createCell(i);
+			celda1.setCellValue(encabezadoL);
+			celda1.setCellStyle(headerStyleLinea);
+		}
+		indiceFila++;
+		fila = hoja.createRow(indiceFila);
+		fila.createCell(0).setCellValue(salida.getOficina().getDireccion());
+		fila.createCell(1).setCellValue(salida.getOficina().getLocalidad());
+		
+		if(salida.getOficina().getProvincia()!=null) {
+			fila.createCell(2).setCellValue(salida.getOficina().getProvincia());
+		}else {
+			fila.createCell(2).setCellValue("-");
+		}
+		
+		fila.createCell(3).setCellValue(salida.getOficina().getPais());
+		
+		if(salida.getOficina().getProvincia()!=null) {
+			fila.createCell(4).setCellValue(salida.getOficina().getCodigoPostal());
+		}else {
+			fila.createCell(4).setCellValue("-");
+		}
+		
+		
+		for (int i = 0; i < 8; i++) {
+			hoja.autoSizeColumn(i);
+			hoja.setDefaultColumnStyle(i, cellStyle);
+		}
+		
+		// Convertir el workbook a bytes
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		workbook.write(outputStream);
+		byte[] bytes = outputStream.toByteArray();
+		outputStream.close();
+		workbook.close();
+
+		return bytes;
+	}
+
+	XSSFCellStyle headerStyleLinea(XSSFWorkbook workbook) {
+		XSSFCellStyle headerStyle = workbook.createCellStyle();
+		headerStyle.setFillForegroundColor(IndexedColors.SKY_BLUE.getIndex());
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
+		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		XSSFFont headerFont = workbook.createFont();
+		headerFont.setColor(IndexedColors.BLACK.getIndex());
+		headerFont.setBold(true);
+		headerStyle.setFont(headerFont);
+		return headerStyle;
+	}
 }

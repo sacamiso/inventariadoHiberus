@@ -26,5 +26,5 @@ public interface SalidaProvider {
 	MessageResponseListDto<List<SalidaDto>> listAllSalidasSkipLimit(Integer page, Integer size, SalidaFilterDto filtros);
 	
 	byte[] descargarExcelSalida(SalidaFilterDto filtros) throws IOException;
-
+	byte[] descargarExcelSalidaById(Integer id) throws IOException;
 }

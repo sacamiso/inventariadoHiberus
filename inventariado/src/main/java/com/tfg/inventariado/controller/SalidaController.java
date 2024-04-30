@@ -113,4 +113,13 @@ public class SalidaController {
 			throw e;
 		}
 	}
+	
+	@PostMapping("/descargarExcelById")
+	public byte[] descargarExcelSalidaById(@RequestParam(value = "id", required = true) Integer id)throws IOException{
+		try {
+			return this.salidaProvider.descargarExcelSalidaById(id);
+		} catch (IOException e) {
+			throw e;
+		}
+	}
 }

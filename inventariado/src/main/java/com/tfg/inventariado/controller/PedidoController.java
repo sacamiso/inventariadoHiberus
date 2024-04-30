@@ -127,7 +127,7 @@ public class PedidoController {
 	}
 	
 	@PostMapping("/descargarExcel")
-	public byte[] descargarExcelSalida(@RequestBody PedidoFilterDto filtros)throws IOException{
+	public byte[] descargarExcelPedido(@RequestBody PedidoFilterDto filtros)throws IOException{
 		try {
 			return this.pedidoProvider.descargarExcelPedido(filtros);
 		} catch (IOException e) {
@@ -136,7 +136,7 @@ public class PedidoController {
 	}
 	
 	@PostMapping("/descargarExcelById")
-	public byte[] descargarExcelSalida(@RequestParam(value = "id", required = true) Integer id)throws IOException{
+	public byte[] descargarExcelPedidoID(@RequestParam(value = "id", required = true) Integer id)throws IOException{
 		try {
 			return this.pedidoProvider.descargarExcelPedidoById(id);
 		} catch (IOException e) {
