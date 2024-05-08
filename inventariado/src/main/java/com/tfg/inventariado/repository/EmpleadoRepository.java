@@ -16,9 +16,11 @@ public interface EmpleadoRepository extends JpaRepository<EmpleadoEntity, Intege
 
 	List<EmpleadoEntity> findByIdOficina(int idOficina);
 	List<EmpleadoEntity> findByCodRol(String codRol);
-	List<EmpleadoEntity> findByUsuario(String usuario);
+	//List<EmpleadoEntity> findByUsuario(String usuario);
+	
 	Optional<EmpleadoEntity> findByDni(String dni);
-
+	Optional<EmpleadoEntity> findByUsuario(String usuario);
+	
 	Page<EmpleadoEntity> findAll(Specification<EmpleadoEntity> spec,Pageable pageable);
 	long count(Specification<EmpleadoEntity> spec);
 }

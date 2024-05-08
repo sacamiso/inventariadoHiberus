@@ -6,3 +6,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+security:
+  jwt:
+    duration: 1440 #En minutos, 24 horas
+    secret: 1w4eqvrR7d3eUr2oOUL5JVqMGVkjbFtuYC1AlF2B6OSKE32W #Secret en base64 distintos para cada entorno para que no sirva el token de uno en otro
+  

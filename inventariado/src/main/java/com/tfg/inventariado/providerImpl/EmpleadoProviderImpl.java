@@ -176,8 +176,8 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 
 	@Override
 	public boolean empleadoExisteByUsuario(String usuario) {
-		List<EmpleadoEntity> listEmpleado = empleadoRepository.findByUsuario(usuario);
-		return listEmpleado.size() != 0;
+		Optional<EmpleadoEntity> listEmpleado = empleadoRepository.findByUsuario(usuario);
+		return listEmpleado.isPresent();
 	}
 
 	@Override
