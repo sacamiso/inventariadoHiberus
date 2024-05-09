@@ -2,6 +2,10 @@ package com.tfg.inventariado.provider;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
+import com.tfg.inventariado.dto.AuthRequestDto;
+import com.tfg.inventariado.dto.AuthResponseDto;
 import com.tfg.inventariado.dto.EmpleadoDto;
 import com.tfg.inventariado.dto.EmpleadoFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
@@ -24,4 +28,6 @@ public interface EmpleadoProvider {
 	
 	MessageResponseListDto<List<EmpleadoDto>> listAllEmpleadosSkipLimit(Integer page, Integer size, EmpleadoFilterDto filtros);
 
+	
+	AuthResponseDto login(@Valid AuthRequestDto authRequest);
 }

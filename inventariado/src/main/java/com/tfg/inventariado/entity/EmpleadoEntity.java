@@ -75,7 +75,7 @@ public class EmpleadoEntity implements Serializable, UserDetails{
 
 	@Override
 	public String getPassword() {
-		return getPassword();
+		return this.getContraseña();
 	}
 
 	@Override

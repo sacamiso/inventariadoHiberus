@@ -22,6 +22,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,16 +76,16 @@ public class JwtProviderImp implements JwtProvider{
 			Jwts.parser().verifyWith(generateSecretKey()).build().parseSignedClaims(token);
 		    return true;
 		} catch (MalformedJwtException ex) {
-		    //log.error("Token JWT invalido");
+		    log.error("Token JWT invalido");
 		} catch (ExpiredJwtException ex) {
-		    //log.error("Token JWT expirado " + ex.getClaims().getSubject());
+		    log.error("Token JWT expirado " + ex.getClaims().getSubject());
 		} catch (UnsupportedJwtException ex) {
-		    //log.error("Token JWT no soportado");
+		    log.error("Token JWT no soportado");
 		} catch (IllegalArgumentException ex) {
-		    //log.error("Token JWT vacio");
-		} //catch (SignatureException e) {
-		    //log.error("Firma JWT invalida");
-		//}
+		    log.error("Token JWT vacio");
+		} catch (SignatureException e) {
+		    log.error("Firma JWT invalida");
+		}
 		return false;
 	}
 

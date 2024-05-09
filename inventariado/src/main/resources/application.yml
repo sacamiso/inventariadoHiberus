@@ -10,4 +10,12 @@ security:
   jwt:
     duration: 1440 #En minutos, 24 horas
     secret: 1w4eqvrR7d3eUr2oOUL5JVqMGVkjbFtuYC1AlF2B6OSKE32W #Secret en base64 distintos para cada entorno para que no sirva el token de uno en otro
-  
+logging:
+  level:
+    .: INFO
+    org.springframework: INFO
+    com.tfg: INFO
+  file:
+    name: /logs/app/inventariado/inventariado.log
+    max-size: 50MB
+    max-history: 15
