@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 		String username = jwtProvider.extraerUsuario(jwt);
 		
 		Optional<EmpleadoEntity> usuario = usuarioRepository.findByUsuario(username);
-		if (usuario.isPresent()) {
+		if (!usuario.isPresent()) {
 			filterChain.doFilter(request, response);
 			return;
 		}
