@@ -64,7 +64,6 @@ public class SecurityCofiguration {
         return provider;
     }
     
-    //TODO: Revisar configuración de CORS para permitir todo ok
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -90,10 +89,8 @@ public class SecurityCofiguration {
         	.authenticationProvider(authenticationProvider())
         	.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         	.authorizeHttpRequests(authConfig -> {
-        		authConfig.requestMatchers("/api/**").authenticated();
         		authConfig.requestMatchers("/auth/login").permitAll();
         		authConfig.requestMatchers("/auth/user").authenticated();
-        		authConfig.requestMatchers("/public/**").permitAll();
         		authConfig.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
         		authConfig.requestMatchers("/configuration/ui", "/swagger-resources/**", "/configuration/security", "/webjars/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll();
         	});

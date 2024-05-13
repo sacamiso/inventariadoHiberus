@@ -35,6 +35,9 @@ import com.tfg.inventariado.provider.OficinaProvider;
 import com.tfg.inventariado.provider.RolProvider;
 import com.tfg.inventariado.repository.EmpleadoRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class EmpleadoProviderImpl implements EmpleadoProvider {
 
@@ -254,7 +257,7 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 		
 
 		if (!usuario.isPresent()) {
-			//log.info("USER_NOT_FOUND");
+			log.info("USER_NOT_FOUND");
 		}
 
 		String jwt = jwtProvider.generateToken(usuario.get(), generateExtraClaims(usuario.get()));

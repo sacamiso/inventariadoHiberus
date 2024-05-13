@@ -1,7 +1,5 @@
 package com.tfg.inventariado.providerImpl;
 
-
-
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Map;
