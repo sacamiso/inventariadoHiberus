@@ -57,10 +57,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 		
 		SecurityContextHolder.getContext().setAuthentication(authToken);
 		
-		//Aprovecho para loggear información de las peticiones que no sean OPTIONS, de swagger o de api-docs o masterdata
-		if (!request.getMethod().equals("OPTIONS") && !request.getRequestURI().contains("swagger") && !request.getRequestURI().contains("api-docs") && !request.getRequestURI().contains("masterdata")) {
-			log.info("[" + request.getMethod() + "] " + request.getRequestURI() + " - Usuario: " + username);
-		}
 		filterChain.doFilter(request, response);			
 	}
 

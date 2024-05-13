@@ -6,6 +6,7 @@ import javax.validation.Valid;
 
 import com.tfg.inventariado.dto.AuthRequestDto;
 import com.tfg.inventariado.dto.AuthResponseDto;
+import com.tfg.inventariado.dto.EmpleadoCambioContrasena;
 import com.tfg.inventariado.dto.EmpleadoDto;
 import com.tfg.inventariado.dto.EmpleadoFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
@@ -30,4 +31,5 @@ public interface EmpleadoProvider {
 
 	
 	AuthResponseDto login(@Valid AuthRequestDto authRequest);
+	MessageResponseDto<String> editContrasenaEmpleado(EmpleadoCambioContrasena empleado);
 }

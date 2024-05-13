@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tfg.inventariado.dto.EmpleadoCambioContrasena;
 import com.tfg.inventariado.dto.EmpleadoDto;
 import com.tfg.inventariado.dto.EmpleadoFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
@@ -104,6 +105,19 @@ public class EmpleadoController {
 		}else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(MessageResponseDto.fail(listEmpleado.getError()));
+		}
+	}
+	
+	@PutMapping("/cambiarContra")
+	public ResponseEntity<MessageResponseDto<String>> cambiarContrasena(
+			@RequestBody @Valid EmpleadoCambioContrasena empleado) {
+		MessageResponseDto<String> messageResponse = this.empleadoProvider.editContrasenaEmpleado(empleado);
+
+		if (messageResponse.isSuccess()) {
+			return ResponseEntity.status(HttpStatus.OK).body(messageResponse);
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(MessageResponseDto.fail(messageResponse.getError()));
 		}
 	}
 }

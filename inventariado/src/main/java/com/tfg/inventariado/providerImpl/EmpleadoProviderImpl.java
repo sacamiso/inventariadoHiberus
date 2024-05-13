@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.AuthRequestDto;
 import com.tfg.inventariado.dto.AuthResponseDto;
+import com.tfg.inventariado.dto.EmpleadoCambioContrasena;
 import com.tfg.inventariado.dto.EmpleadoDto;
 import com.tfg.inventariado.dto.EmpleadoFilterDto;
 import com.tfg.inventariado.dto.MessageResponseDto;
@@ -270,5 +271,24 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 		extraClaims.put("rol", usuarioEntity.getCodRol());
 		extraClaims.put("id", usuarioEntity.getIdEmpleado());
 		return extraClaims;
+	}
+
+	@Override
+	public MessageResponseDto<String> editContrasenaEmpleado(EmpleadoCambioContrasena empleado) {
+		Optional<EmpleadoEntity> optionalEmpleado = empleadoRepository.findById(empleado.getEmpleado().getIdEmpleado());
+		
+		if (optionalEmpleado.isPresent()) {
+			EmpleadoEntity empleadoBD = optionalEmpleado.get();
+
+			//Falta aquí lógica
+
+			empleadoRepository.save(empleadoBD);
+
+			return MessageResponseDto.success("Empledo editado con éxito");
+
+		} else {
+			return MessageResponseDto.fail("El empleado que se desea editar no existe");
+		}
+		
 	}
 }
