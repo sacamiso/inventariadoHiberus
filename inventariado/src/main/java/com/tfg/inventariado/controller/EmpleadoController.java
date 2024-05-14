@@ -108,9 +108,8 @@ public class EmpleadoController {
 		}
 	}
 	
-	@PutMapping("/cambiarContra")
-	public ResponseEntity<MessageResponseDto<String>> cambiarContrasena(
-			@RequestBody @Valid EmpleadoCambioContrasena empleado) {
+	@PostMapping("/cambiarContra")
+	public ResponseEntity<MessageResponseDto<String>> cambiarContrasena(@RequestBody EmpleadoCambioContrasena empleado) {
 		MessageResponseDto<String> messageResponse = this.empleadoProvider.editContrasenaEmpleado(empleado);
 
 		if (messageResponse.isSuccess()) {

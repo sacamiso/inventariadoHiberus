@@ -152,7 +152,8 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 			empleado.setUsuario(empleadoToUpdate.getUsuario());
 		}
 		if (StringUtils.isNotBlank(empleadoToUpdate.getContraseña())) {
-			empleado.setContraseña(empleadoToUpdate.getContraseña());
+			BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+			empleado.setContraseña(passwordEncoder.encode(empleadoToUpdate.getContraseña()));
 		}
 		if (this.rolProvider.rolExisteByCodigo(empleadoToUpdate.getCodRol())) {
 			empleado.setCodRol(empleadoToUpdate.getCodRol());
@@ -275,20 +276,32 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 
 	@Override
 	public MessageResponseDto<String> editContrasenaEmpleado(EmpleadoCambioContrasena empleado) {
-		Optional<EmpleadoEntity> optionalEmpleado = empleadoRepository.findById(empleado.getEmpleado().getIdEmpleado());
 		
-		if (optionalEmpleado.isPresent()) {
-			EmpleadoEntity empleadoBD = optionalEmpleado.get();
-
-			//Falta aquí lógica
-
-			empleadoRepository.save(empleadoBD);
-
-			return MessageResponseDto.success("Empledo editado con éxito");
-
-		} else {
+		if(empleado.getContraNueva().equals(empleado.getContraAct())) {
+			return MessageResponseDto.fail("La contraseña nueva no puede ser la misma que la actual");
+		}
+		
+		Optional<EmpleadoEntity> optionalEmpleado = empleadoRepository.findById(empleado.getEmpleado().getIdEmpleado());
+		if (!optionalEmpleado.isPresent()) {
 			return MessageResponseDto.fail("El empleado que se desea editar no existe");
 		}
 		
+		
+		EmpleadoEntity empleadoBD = optionalEmpleado.get();
+
+		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+		if (!passwordEncoder.matches(empleado.getContraAct(), empleadoBD.getContraseña())) {
+	        return MessageResponseDto.fail("La contraseña actual es incorrecta");
+	    }
+
+		empleadoBD.setContraseña(passwordEncoder.encode(empleado.getContraNueva()));
+		
+		
+		empleadoRepository.save(empleadoBD);
+
+		return MessageResponseDto.success("Contraseña actualizada con éxito");
+
 	}
+	
 }
