@@ -144,6 +144,12 @@
 		    <version>0.12.3</version>
 		    <scope>runtime</scope>
 		</dependency>
+		
+		<!-- Java mail -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 	</dependencies>
 
 
