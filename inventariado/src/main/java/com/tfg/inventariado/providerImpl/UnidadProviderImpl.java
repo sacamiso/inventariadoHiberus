@@ -1,12 +1,27 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -452,5 +467,224 @@ public class UnidadProviderImpl implements UnidadProvider {
 			}
 		}
 		return MessageResponseDto.success(false);
+	}
+
+	private XSSFCellStyle headerStyle(XSSFWorkbook workbook) {
+		XSSFCellStyle headerStyle = workbook.createCellStyle();
+		headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
+		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		XSSFFont headerFont = workbook.createFont();
+		headerFont.setColor(IndexedColors.WHITE.getIndex());
+		headerFont.setBold(true);
+		headerStyle.setFont(headerFont);
+		return headerStyle;
+	}
+	
+	private XSSFCellStyle headerStyleLinea(XSSFWorkbook workbook) {
+		XSSFCellStyle headerStyle = workbook.createCellStyle();
+		headerStyle.setFillForegroundColor(IndexedColors.SKY_BLUE.getIndex());
+		headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		headerStyle.setAlignment(HorizontalAlignment.CENTER);
+		headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		XSSFFont headerFont = workbook.createFont();
+		headerFont.setColor(IndexedColors.BLACK.getIndex());
+		headerFont.setBold(true);
+		headerStyle.setFont(headerFont);
+		return headerStyle;
+	}
+
+	@Override
+	public byte[] descargarExcelUnidadById(Integer id) throws IOException {
+
+		MessageResponseDto<UnidadDto> unidadMSG = this.getUnidadById(id);
+		if(!unidadMSG.isSuccess()) {
+			throw new IOException("No se ha encontrado la unidad");
+		}
+		
+		UnidadDto unidad = unidadMSG.getMessage();
+		
+		XSSFWorkbook workbook = new XSSFWorkbook();
+		XSSFSheet hoja = workbook.createSheet("Unidad " + id);
+		
+		XSSFCellStyle headerStyle = headerStyle(workbook);
+		
+		String[] encabezados = { "código interno", "Estado", "Asignado", "Detalles pedido", "Detalles salida"};
+		
+		int indiceFila = 1;
+		XSSFRow fila = hoja.createRow(indiceFila);
+		
+		for (int i = 0; i < encabezados.length; i++) {
+			String encabezado = encabezados[i];
+			XSSFCell celda = fila.createCell(i);
+			celda.setCellValue(encabezado);
+			celda.setCellStyle(headerStyle);
+		}
+		
+		HashMap<String, XSSFCellStyle> styles = new HashMap<>();
+		styles.put("HEADER", headerStyle);
+		
+		XSSFCellStyle cellStyle = workbook.createCellStyle();
+		cellStyle.setAlignment(HorizontalAlignment.CENTER);
+		cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+		
+		// Formato de fecha
+		CreationHelper creationHelper = workbook.getCreationHelper();
+		CellStyle dateCellStyle = workbook.createCellStyle();
+		dateCellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/mm/yyyy"));
+		
+		indiceFila++;
+		
+		fila = hoja.createRow(indiceFila);
+		
+		fila.createCell(0).setCellValue(unidad.getCodigoInterno());
+		fila.createCell(1).setCellValue(unidad.getEstado().getCodigoEstado() + ": " + unidad.getEstado().getNombre());
+		
+		boolean asignado = this.estaAsignada(id).getMessage();
+		if(asignado) {
+			fila.createCell(2).setCellValue("SI");
+		}else {
+			fila.createCell(2).setCellValue("NO");
+		}
+		
+		if(unidad.getPedido()!=null) {
+			fila.createCell(3).setCellValue("SI");
+		}else {
+			fila.createCell(3).setCellValue("NO");
+		}
+		
+		if(unidad.getSalida()!=null) {
+			fila.createCell(4).setCellValue("SI");
+		}else {
+			fila.createCell(4).setCellValue("NO");
+		}
+		
+		indiceFila++;
+		indiceFila++;
+		
+		String[] encabezadosArtículo = { "Referencia", "Descripción", "Precio (€)", "IVA (%)", "Categoría",
+				"Subcategoría", "Fabricante", "Modelo" };
+		
+		fila = hoja.createRow(indiceFila);
+		XSSFCell celda = fila.createCell(0);
+		celda.setCellValue("ARTÍCULO");
+		celda.setCellStyle(headerStyle);
+		indiceFila++;
+		indiceFila++;
+		
+		XSSFCellStyle headerStyleLinea = headerStyleLinea(workbook);
+		fila = hoja.createRow(indiceFila);
+		for (int i = 0; i < encabezadosArtículo.length; i++) {
+			String encabezadoL = encabezadosArtículo[i];
+			XSSFCell celda1 = fila.createCell(i);
+			celda1.setCellValue(encabezadoL);
+			celda1.setCellStyle(headerStyleLinea);
+		}
+		
+		indiceFila++;
+		fila = hoja.createRow(indiceFila);
+		fila.createCell(0).setCellValue(unidad.getArticulo().getReferencia());
+        fila.createCell(1).setCellValue(unidad.getArticulo().getDescripcion());
+        fila.createCell(2).setCellValue(unidad.getArticulo().getPrecioUnitario());
+        fila.createCell(3).setCellValue(unidad.getArticulo().getIva());
+        fila.createCell(4).setCellValue(unidad.getArticulo().getCodCategoria());
+        fila.createCell(5).setCellValue(unidad.getArticulo().getCodSubcategoria());
+        fila.createCell(6).setCellValue(unidad.getArticulo().getFabricante());
+        fila.createCell(7).setCellValue(unidad.getArticulo().getModelo());
+        
+        indiceFila++;
+		indiceFila++;
+		
+		String[] encabezadosOficina = { "Dirección", "Localidad", "Provincia", "País", "Código postal"};
+		
+		fila = hoja.createRow(indiceFila);
+		XSSFCell celda3 = fila.createCell(0);
+		celda3.setCellValue("OFICINA DE SALIDA");
+		celda3.setCellStyle(headerStyle);
+		indiceFila++;
+		indiceFila++;
+		
+		fila = hoja.createRow(indiceFila);
+		for (int i = 0; i < encabezadosOficina.length; i++) {
+			String encabezadoL = encabezadosOficina[i];
+			XSSFCell celda1 = fila.createCell(i);
+			celda1.setCellValue(encabezadoL);
+			celda1.setCellStyle(headerStyleLinea);
+		}
+		indiceFila++;
+		fila = hoja.createRow(indiceFila);
+		fila.createCell(0).setCellValue(unidad.getOficina().getDireccion());
+		fila.createCell(1).setCellValue(unidad.getOficina().getLocalidad());
+		
+		if(unidad.getOficina().getProvincia()!=null) {
+			fila.createCell(2).setCellValue(unidad.getOficina().getProvincia());
+		}else {
+			fila.createCell(2).setCellValue("-");
+		}
+		
+		fila.createCell(3).setCellValue(unidad.getOficina().getPais());
+		
+		if(unidad.getOficina().getProvincia()!=null) {
+			fila.createCell(4).setCellValue(unidad.getOficina().getCodigoPostal());
+		}else {
+			fila.createCell(4).setCellValue("-");
+		}
+		
+		List<AsignacionEntity> listaAsignaciónEntity = this.asignacionRepository.findByCodUnidad(id);
+
+		if(listaAsignaciónEntity.size()>0) {
+			indiceFila++;
+			indiceFila++;
+			
+			String[] encabezadosAsignacion = { "Fecha inicio", "Fecha fin", "Empleado"};
+			
+			fila = hoja.createRow(indiceFila);
+			celda = fila.createCell(0);
+			celda.setCellValue("ASIGNACIONES");
+			celda.setCellStyle(headerStyle);
+			indiceFila++;
+			indiceFila++;
+			
+			fila = hoja.createRow(indiceFila);
+			for (int i = 0; i < encabezadosAsignacion.length; i++) {
+				String encabezadoL = encabezadosAsignacion[i];
+				XSSFCell celda1 = fila.createCell(i);
+				celda1.setCellValue(encabezadoL);
+				celda1.setCellStyle(headerStyleLinea);
+			}
+			indiceFila++;
+			
+			for (AsignacionEntity asignacion : listaAsignaciónEntity) {
+				fila = hoja.createRow(indiceFila);
+				
+				fila.createCell(0).setCellValue(asignacion.getFechaInicio());
+				fila.getCell(0).setCellStyle(dateCellStyle);
+				
+				if(asignacion.getFechaFin()!= null) {
+					fila.createCell(1).setCellValue(asignacion.getFechaFin());
+					fila.getCell(1).setCellStyle(dateCellStyle);
+				}else {
+					fila.createCell(1).setCellValue("-");
+				}
+				
+				fila.createCell(2).setCellValue(asignacion.getEmpleado().getDni() + ": " + asignacion.getEmpleado().getNombre()+ " " + asignacion.getEmpleado().getApellidos());
+				indiceFila++;
+			}
+		}
+		
+		for (int i = 0; i < 8; i++) {
+			hoja.autoSizeColumn(i);
+			hoja.setDefaultColumnStyle(i, cellStyle);
+		}
+		
+		// Convertir el workbook a bytes
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		workbook.write(outputStream);
+		byte[] bytes = outputStream.toByteArray();
+		outputStream.close();
+		workbook.close();
+
+		return bytes;
 	}
 }

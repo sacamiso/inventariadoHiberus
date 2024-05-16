@@ -1,5 +1,6 @@
 package com.tfg.inventariado.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -209,6 +210,15 @@ public class UnidadController {
 		}else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(MessageResponseDto.fail(res.getError()));
+		}
+	}
+	
+	@PostMapping("/descargarExcelById")
+	public byte[] descargarExcelUnidadById(@RequestParam(value = "id", required = true) Integer id)throws IOException{
+		try {
+			return this.unidadProvider.descargarExcelUnidadById(id);
+		} catch (IOException e) {
+			throw e;
 		}
 	}
 	

@@ -1,5 +1,6 @@
 package com.tfg.inventariado.provider;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.tfg.inventariado.dto.ArticuloDto;
@@ -37,4 +38,6 @@ public interface UnidadProvider {
 	
 	MessageResponseDto<List<UnidadDto>> listUnidadDisponiblesSinAsignarByOficina(Integer idOficina);
 	MessageResponseDto<Boolean> estaAsignada(Integer codInterno);
+	
+	byte[] descargarExcelUnidadById(Integer id) throws IOException;
 }
