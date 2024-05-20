@@ -177,7 +177,7 @@ public class InventarioProviderImpl implements InventarioProvider{
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
 			return MessageResponseDto.fail("La oficina no existe");
 		}
-		List<InventarioEntity> listaEntity = this.inventarioRepository.findByIdOficina(idOficina);
+		List<InventarioEntity> listaEntity = this.inventarioRepository.findByIdOficinaOrderByArticuloReferenciaAsc(idOficina);
 		List<InventarioDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}

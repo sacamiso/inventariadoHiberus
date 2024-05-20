@@ -3,6 +3,7 @@ package com.tfg.inventariado.providerImpl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -74,7 +75,9 @@ public class SalidaProviderImpl implements SalidaProvider {
 	@Override
 	public List<SalidaDto> listAllSalidas() {
 		List<SalidaEntity> listaEntity = saldiaRepository.findAll();
-		return listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaEntity.stream()
+				.sorted(Comparator.comparing(SalidaEntity::getIdSalida))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 	}
 
 	//Cuando se añade una salida se modifica el inventario y eso a su vez modifica el historial
@@ -206,7 +209,9 @@ public class SalidaProviderImpl implements SalidaProvider {
 			return MessageResponseDto.fail("La oficina no existe");
 		}
 		List<SalidaEntity> listaEntity = this.saldiaRepository.findByIdOficina(idOficina);
-		List<SalidaDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<SalidaDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(SalidaEntity::getIdSalida))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 
@@ -216,7 +221,9 @@ public class SalidaProviderImpl implements SalidaProvider {
 			return MessageResponseDto.fail("El artículo no existe");
 		}
 		List<SalidaEntity> listaEntity = this.saldiaRepository.findByCodArticulo(idArticulo);
-		List<SalidaDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<SalidaDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(SalidaEntity::getIdSalida))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 

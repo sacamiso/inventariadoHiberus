@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +74,9 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 	@Override
 	public List<EmpleadoDto> listAllEmpleado() {
 		List<EmpleadoEntity> listaEntity = empleadoRepository.findAll();
-		return listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaEntity.stream()
+				.sorted(Comparator.comparing(EmpleadoEntity::getNombre, String.CASE_INSENSITIVE_ORDER))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 	}
 
 	@Override

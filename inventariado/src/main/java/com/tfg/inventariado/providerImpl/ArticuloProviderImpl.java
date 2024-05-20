@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -51,7 +52,10 @@ public class ArticuloProviderImpl implements ArticuloProvider {
 	@Override
 	public List<ArticuloDto> listAllArticulo() {
 		List<ArticuloEntity> listaArticuloEntity = this.articuloRepository.findAll();
-		return listaArticuloEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaArticuloEntity.stream()
+		        .sorted(Comparator.comparing(ArticuloEntity::getReferencia))
+		        .map(this::convertToMapDto)
+		        .collect(Collectors.toList());
 	}
 
 	@Override
@@ -144,7 +148,7 @@ public class ArticuloProviderImpl implements ArticuloProvider {
 			return MessageResponseDto.fail("La categoria no existe");
 		}
 		List<ArticuloEntity> listaArticuloEntity = this.articuloRepository.findByCodCategoria(codigoCategoria);
-		List<ArticuloDto> listaArticuloDto = listaArticuloEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<ArticuloDto> listaArticuloDto = listaArticuloEntity.stream().sorted(Comparator.comparing(ArticuloEntity::getReferencia)).map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaArticuloDto);
 	}
 
@@ -154,7 +158,7 @@ public class ArticuloProviderImpl implements ArticuloProvider {
 			return MessageResponseDto.fail("La subcategoria no existe");
 		}
 		List<ArticuloEntity> listaArticuloEntity = this.articuloRepository.findByCodCategoriaAndCodSubcategoria(codigoCategoria,codigoSubcategoria);
-		List<ArticuloDto> listaArticuloDto = listaArticuloEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<ArticuloDto> listaArticuloDto = listaArticuloEntity.stream().sorted(Comparator.comparing(ArticuloEntity::getReferencia)).map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaArticuloDto);
 		
 	}

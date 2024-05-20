@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,7 +46,9 @@ public class LineaProviderImpl implements LineaProvider {
 	@Override
 	public List<LineaDto> listAllLineas() {
 		List<LineaEntity> listaEntity = lineaRepository.findAll();
-		return listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaEntity.stream()
+				.sorted(Comparator.comparing(LineaEntity::getNumeroLinea))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 	}
 	
 	private MessageResponseDto<String> validaLinea(LineaDto linea){
@@ -160,7 +163,9 @@ public class LineaProviderImpl implements LineaProvider {
 //			return MessageResponseDto.fail("El pedido no existe");
 //		}
 		List<LineaEntity> listaEntity = this.lineaRepository.findByNumeroPedido(numPedido);
-		List<LineaDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<LineaDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(LineaEntity::getNumeroLinea))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 

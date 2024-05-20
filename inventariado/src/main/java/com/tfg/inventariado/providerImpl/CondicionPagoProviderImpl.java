@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -37,7 +38,9 @@ public class CondicionPagoProviderImpl implements CondicionPagoProvider {
 	@Override
 	public List<CondicionPagoDto> listAllCondicionPago() {
 		List<CondicionPagoEntity> listaCondicionEntity = condicionPagoRepository.findAll();
-		return listaCondicionEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaCondicionEntity.stream()
+				.sorted(Comparator.comparing(CondicionPagoEntity::getDescripcion, String.CASE_INSENSITIVE_ORDER))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 	}
 
 	@Override

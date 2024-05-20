@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +100,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 	@Override
 	public List<UnidadDto> listAllUnidades() {
 		List<UnidadEntity> listaEntity = unidadRepository.findAll();
-		return listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaEntity.stream()
+				.sorted(Comparator.comparing(UnidadEntity::getCodigoInterno))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 	}
 
 	@Override
@@ -241,14 +244,18 @@ public class UnidadProviderImpl implements UnidadProvider {
 			return MessageResponseDto.fail("El estado no existe");
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByCodEstado(codEstado);
-		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<UnidadDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(UnidadEntity::getCodigoInterno))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 
 	@Override
 	public MessageResponseDto<List<UnidadDto>> listUnidadDisponibles() {
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdSalidaIsNullAndCodEstadoNot("MANT");
-		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<UnidadDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(UnidadEntity::getCodigoInterno))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 
@@ -258,14 +265,18 @@ public class UnidadProviderImpl implements UnidadProvider {
 			return MessageResponseDto.fail("La oficina no existe");
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdSalidaIsNullAndCodEstadoNotAndIdOficina("MANT",idOficina);
-		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<UnidadDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(UnidadEntity::getCodigoInterno))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 
 	@Override
 	public MessageResponseDto<List<UnidadDto>> listUnidadNODisponibles() {
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdSalidaIsNotNullOrCodEstado("S");
-		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<UnidadDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(UnidadEntity::getCodigoInterno))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 
@@ -275,7 +286,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 			return MessageResponseDto.fail("La oficina no existe");
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdSalidaIsNotNullAndIdOficina(idOficina);
-		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<UnidadDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(UnidadEntity::getCodigoInterno))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 
@@ -285,7 +298,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 			return MessageResponseDto.fail("La oficina no existe");
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdOficina(idOficina);
-		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<UnidadDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(UnidadEntity::getCodigoInterno))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 
@@ -295,7 +310,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 			return MessageResponseDto.fail("El artículo no existe");
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByCodArticulo(idArticulo);
-		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<UnidadDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(UnidadEntity::getCodigoInterno))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 
@@ -385,7 +402,7 @@ public class UnidadProviderImpl implements UnidadProvider {
 		Map<Integer, Long> unidadesPorArticulo = unidades.stream().collect(Collectors.groupingBy(UnidadEntity::getCodArticulo, Collectors.counting()));
 
         // Obtener las entidades de inventario para la misma oficina
-		List<InventarioEntity> inventario = inventarioRepository.findByIdOficina(idOficina);
+		List<InventarioEntity> inventario = inventarioRepository.findByIdOficinaOrderByArticuloReferenciaAsc(idOficina);
 
 		List<ArticuloEntity> listArticulos = new ArrayList<ArticuloEntity>();
 		
@@ -454,7 +471,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 			return MessageResponseDto.fail("La oficina no existe");
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findUnidadesLibresByEstadoAndOficina("OP",idOficina);
-		List<UnidadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		List<UnidadDto> listaDto = listaEntity.stream()
+				.sorted(Comparator.comparing(UnidadEntity::getCodigoInterno))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 		return MessageResponseDto.success(listaDto);
 	}
 

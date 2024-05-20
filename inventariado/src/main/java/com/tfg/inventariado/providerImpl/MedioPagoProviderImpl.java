@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -37,7 +38,9 @@ public class MedioPagoProviderImpl implements MedioPagoProvider {
 	@Override
 	public List<MedioPagoDto> listAllMedioPago() {
 		List<MedioPagoEntity> listaMedioEntity = medioPagoRepository.findAll();
-		return listaMedioEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaMedioEntity.stream()
+				.sorted(Comparator.comparing(MedioPagoEntity::getDescripcion, String.CASE_INSENSITIVE_ORDER))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 	}
 
 	@Override

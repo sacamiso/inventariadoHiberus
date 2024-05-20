@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,7 +39,9 @@ public class CategoriaProviderImpl implements CategoriaProvider {
 	@Override
 	public List<CategoriaDto> listAllCategoria() {
 		List<CategoriaEntity> listaCategoriaEntity = categoriaRepository.findAll();
-		return listaCategoriaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaCategoriaEntity.stream()
+				.sorted(Comparator.comparing(CategoriaEntity::getCodigoCategoria, String.CASE_INSENSITIVE_ORDER))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 	}
 
 	@Override

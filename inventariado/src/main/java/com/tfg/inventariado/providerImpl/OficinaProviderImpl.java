@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,7 +44,10 @@ public class OficinaProviderImpl implements OficinaProvider {
 	@Override
 	public List<OficinaDto> listAllOficinas() {
 		List<OficinaEntity> listaOficinaEntity = oficinaRepository.findAll();
-		return listaOficinaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaOficinaEntity.stream()
+			        .sorted(Comparator.comparing(OficinaEntity::getDireccion, String.CASE_INSENSITIVE_ORDER))
+			        .map(this::convertToMapDto)
+			        .collect(Collectors.toList());
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,7 +44,9 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 	@Override
 	public List<ProveedorDto> listAllProveedores() {
 		List<ProveedorEntity> listaEntity = proveedorRepository.findAll();
-		return listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaEntity.stream()
+				.sorted(Comparator.comparing(ProveedorEntity::getRazonSocial, String.CASE_INSENSITIVE_ORDER))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 	}
 
 	@Override

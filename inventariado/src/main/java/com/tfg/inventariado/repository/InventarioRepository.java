@@ -14,7 +14,7 @@ import com.tfg.inventariado.entity.id.InventarioEntityID;
 
 @Repository
 public interface InventarioRepository extends JpaRepository<InventarioEntity, InventarioEntityID> {
-	List<InventarioEntity> findByIdOficina(int idOficina);
+	List<InventarioEntity> findByIdOficinaOrderByArticuloReferenciaAsc(int idOficina);
 	List<InventarioEntity> findByCodArticulo(int codArt);
 	
 	Page<InventarioEntity> findAll(Specification<InventarioEntity> spec, Pageable pageable);

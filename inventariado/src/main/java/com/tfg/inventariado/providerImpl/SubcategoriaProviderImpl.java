@@ -1,5 +1,6 @@
 package com.tfg.inventariado.providerImpl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,7 +43,9 @@ public class SubcategoriaProviderImpl implements SubcategoriaProvider {
 	@Override
 	public List<SubcategoriaDto> listAllSubcategoria() {
 		List<SubcategoriaEntity> listaSubcategoriaEntity = this.subcategoriaRepository.findAll();
-		return listaSubcategoriaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
+		return listaSubcategoriaEntity.stream()
+				.sorted(Comparator.comparing(SubcategoriaEntity::getCodigoSubcategoria, String.CASE_INSENSITIVE_ORDER))
+				.map(this::convertToMapDto).collect(Collectors.toList());
 	}
 
 	@Override
