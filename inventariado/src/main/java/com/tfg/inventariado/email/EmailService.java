@@ -18,8 +18,9 @@ public class EmailService {
 	public void sendEmail(String to, String subject, String text, byte[] attachmentData, String attachmentName) {
         try {
             MimeMessage message = emailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            message.setFrom("inventariadohiberus@outlook.es");
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(text);

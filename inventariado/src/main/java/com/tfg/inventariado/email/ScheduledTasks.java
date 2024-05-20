@@ -23,7 +23,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.tfg.inventariado.entity.EmpleadoEntity;
 import com.tfg.inventariado.entity.InventarioEntity;
+import com.tfg.inventariado.repository.EmpleadoRepository;
 import com.tfg.inventariado.repository.InventarioRepository;
 
 @Component
@@ -33,26 +35,32 @@ public class ScheduledTasks {
 	private EmailService emailService;
 	
 	@Autowired
+	private EmpleadoRepository empleadoRepository;
+	
+	@Autowired
 	private InventarioRepository inventarioRepository;
 
     public ScheduledTasks(EmailService emailService) {
         this.emailService = emailService;
     }
 
-    //@Scheduled(cron = "0 0 0 1 * ?") // Se ejecuta a las 00:00 del primer día de cada mes
-    //@Scheduled(fixedRate = 1) // para hacer las pruebas
+    @Scheduled(cron = "0 0 0 1 * ?") // Se ejecuta a las 00:00 del primer día de cada mes
+    //@Scheduled(cron = "0 0 11 * * ?")	//para probar que la anotación funciona bien, lo ejecuta a las 11:00
+    //@Scheduled(fixedRate = Long.MAX_VALUE) // para hacer las pruebas y ver que se envían correctamente
     public void sendMonthlyReport() {
     	File attachment;
 		try {
 			attachment = this.descargarExcelInventario();
-			
-			String to = "sacamiso@unirioja.es";
-	        String subject = "Informe mensual";
-	        String text = "Adjunto el informe mensual de la aplicación.";
-	        
+			String to;
+	        String subject = "Informe mensual del inventario";
+	        String text = "Adjunto el informe mensual referente al inventario.";
 	        byte[] attachmentData = Files.readAllBytes(attachment.toPath());
-            emailService.sendEmail(to, subject, text, attachmentData, attachment.getName());
-            
+			List<EmpleadoEntity> empleadosAdmin = this.empleadoRepository.findByCodRol("ADM");
+			
+			for(EmpleadoEntity empl : empleadosAdmin) {
+				to = empl.getCorreo();
+				emailService.sendEmail(to, subject, text, attachmentData, attachment.getName());
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -45,6 +45,9 @@ public class EmpleadoEntity implements Serializable, UserDetails{
 	@Column(name="apellidos", nullable = false)
 	private String apellidos;
 	
+	@Column(name="correo", nullable = false)
+	private String correo;
+	
 	@Column(name="usuario", nullable = false, unique = true)
 	private String usuario;
 	
