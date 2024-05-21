@@ -124,23 +124,37 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 		if (optionalEmpleado.isPresent()) {
 			EmpleadoEntity empleadoToUpdate = optionalEmpleado.get();
 
-			this.actualizarCampos(empleadoToUpdate, empleado);
+			MessageResponseDto<String> respuesta = this.actualizarCampos(empleadoToUpdate, empleado);
+			
+			if(respuesta.isSuccess()) {
+				empleadoRepository.save(empleadoToUpdate);
+			}
 
-			empleadoRepository.save(empleadoToUpdate);
-
-			return MessageResponseDto.success("Empledo editado con éxito");
+			return respuesta;
 
 		} else {
 			return MessageResponseDto.fail("El empleado que se desea editar no existe");
 		}
 	}
 
-	private void actualizarCampos(EmpleadoEntity empleado, EmpleadoDto empleadoToUpdate) {
+	private MessageResponseDto<String> actualizarCampos(EmpleadoEntity empleado, EmpleadoDto empleadoToUpdate) {
 
 		String patronDNI = "\\d{8}[A-HJ-NP-TV-Z]";
 		Pattern pattern = Pattern.compile(patronDNI);
 		Matcher matcher = pattern.matcher(empleadoToUpdate.getDni());
 
+		if (!matcher.matches()) {
+			return MessageResponseDto.fail("DNI inválido");
+		}
+		
+		if (this.empleadoRepository.findByDni(empleadoToUpdate.getDni()).isPresent() && !empleado.getDni().equals(empleadoToUpdate.getDni())) {
+			return MessageResponseDto.fail("DNI en uso");
+		}
+		
+		if (this.empleadoExisteByUsuario(empleadoToUpdate.getUsuario()) && !empleado.getUsuario().equals(empleadoToUpdate.getUsuario())) {
+			return MessageResponseDto.fail("Usuario en uso");
+		}
+		
 		if (matcher.matches() && !this.empleadoRepository.findByDni(empleadoToUpdate.getDni()).isPresent()) {
 			empleado.setDni(empleadoToUpdate.getDni());
 		}
@@ -149,6 +163,9 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 		}
 		if (StringUtils.isNotBlank(empleadoToUpdate.getApellidos())) {
 			empleado.setApellidos(empleadoToUpdate.getApellidos());
+		}
+		if (StringUtils.isNotBlank(empleadoToUpdate.getCorreo())) {
+			empleado.setCorreo(empleadoToUpdate.getCorreo());
 		}
 		if (!this.empleadoExisteByUsuario(empleadoToUpdate.getUsuario())
 				&& StringUtils.isNotBlank(empleadoToUpdate.getUsuario())) {
@@ -164,6 +181,8 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 		if (this.oficinaProvider.oficinaExisteByID(empleadoToUpdate.getIdOficina())) {
 			empleado.setIdOficina(empleadoToUpdate.getIdOficina());
 		}
+		
+		return MessageResponseDto.success("Empledo editado con éxito");
 	}
 
 	@Override
