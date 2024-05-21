@@ -87,19 +87,27 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 		if(optionalProveedor.isPresent()) {
 			ProveedorEntity proveedorToUpdate = optionalProveedor.get();
 			
-			this.actualizarCampos(proveedorToUpdate, proveedor);
+			MessageResponseDto<String> respuesta = this.actualizarCampos(proveedorToUpdate, proveedor);
 			
-			proveedorRepository.save(proveedorToUpdate);
-			
-			return MessageResponseDto.success("Proveedor editado con éxito");
+			if(respuesta.isSuccess()) {
+				proveedorRepository.save(proveedorToUpdate);
+			}
+			return respuesta;
 			
 		}else {
 			return MessageResponseDto.fail("El proveedor que se desea editar no existe");
 		}
 	}
 
-	private void actualizarCampos(ProveedorEntity proveedor, ProveedorDto proveedorToUpdate) {
+	private MessageResponseDto<String> actualizarCampos(ProveedorEntity proveedor, ProveedorDto proveedorToUpdate) {
 		
+		if( proveedorRepository.findByCif(proveedorToUpdate.getCif()).isPresent() && !proveedor.getCif().equals(proveedorToUpdate.getCif())) {
+			return MessageResponseDto.fail("CIF en uso");
+		}
+		String cp = String.valueOf(proveedorToUpdate.getCodigoPostal());
+		if(cp.length() != 5) {
+			return MessageResponseDto.fail("Código postal inválido");
+		}
 		if(StringUtils.isNotBlank(proveedorToUpdate.getCif()) && !proveedorRepository.findByCif(proveedorToUpdate.getCif()).isPresent()) {
 			proveedor.setCif(proveedorToUpdate.getCif());
 		}
@@ -110,7 +118,7 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 		if(StringUtils.isNotBlank(proveedorToUpdate.getDireccion())) {
 			proveedor.setDireccion(proveedorToUpdate.getDireccion());
 		}
-		String cp = String.valueOf(proveedorToUpdate.getCodigoPostal());
+		
 		if(cp.length() == 5) {
 			proveedor.setCodigoPostal(proveedorToUpdate.getCodigoPostal());
 		}
@@ -123,6 +131,9 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 		if(StringUtils.isNotBlank(proveedorToUpdate.getEmail())) {
 			proveedor.setEmail(proveedorToUpdate.getEmail());
 		}
+		
+		return MessageResponseDto.success("Proveedor editado con éxito");
+
 	}
 	
 	@Override
