@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -65,6 +68,9 @@ public class InventarioProviderImpl implements InventarioProvider{
 	@Autowired
 	private ArticuloProvider articuloProvider;
 	
+	@Autowired
+    private MessageSource messageSource;
+	
 	@Override
 	public InventarioDto convertToMapDto(InventarioEntity inventario) {
 		return modelMapper.map(inventario, InventarioDto.class);
@@ -85,16 +91,18 @@ public class InventarioProviderImpl implements InventarioProvider{
 	@Transactional
 	@Override
 	public MessageResponseDto<String> addInventario(InventarioDto inventario) {
+		Locale locale = LocaleContextHolder.getLocale();
+
 		if(inventario.getCodArticulo()==null || !this.articuloProvider.articuloExisteByID(inventario.getCodArticulo())) {
-			return MessageResponseDto.fail("El artículo no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("articuloNoExiste", null, locale));
 		}
 		if(inventario.getIdOficina()==null || !this.oficinaProvider.oficinaExisteByID(inventario.getIdOficina())) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		InventarioEntityID id = new InventarioEntityID(inventario.getCodArticulo(), inventario.getIdOficina());
 		
 		if(inventarioRepository.findById(id).isPresent()) {
-			return MessageResponseDto.fail("El inventario ya existe, debe editarlo");
+			return MessageResponseDto.fail(messageSource.getMessage("inventarioExiste", null, locale));
 		}
 		
 		OficinaDto of = oficinaProvider.getOficinaById(inventario.getIdOficina()).getMessage();
@@ -110,12 +118,14 @@ public class InventarioProviderImpl implements InventarioProvider{
 		
 		StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
 		
-		return MessageResponseDto.success("Inventario añadido con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("inventarioAnadido", null, locale));
 	}
 
 	@Transactional
 	@Override
 	public MessageResponseDto<String> editInventario(InventarioDto inventario, Integer idOf, Integer idArt) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		InventarioEntityID id = new InventarioEntityID(idArt, idOf);
 		Optional<InventarioEntity> optionalInventario = inventarioRepository.findById(id);
 		if(optionalInventario.isPresent()) {
@@ -140,10 +150,10 @@ public class InventarioProviderImpl implements InventarioProvider{
 			}
 			StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
 			
-			return MessageResponseDto.success("Inventario editado con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("inventarioEditado", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("El inventario que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("inventarioNoExiste", null, locale));
 		}
 	}
 	
@@ -155,13 +165,14 @@ public class InventarioProviderImpl implements InventarioProvider{
 
 	@Override
 	public MessageResponseDto<InventarioDto> getInventarioById(Integer idOf, Integer idArt) {
+		Locale locale = LocaleContextHolder.getLocale();
 		InventarioEntityID id = new InventarioEntityID(idArt, idOf);
 		Optional<InventarioEntity> optional = inventarioRepository.findById(id);
 		if(optional.isPresent()) {
 			InventarioDto inventarioDto = this.convertToMapDto(optional.get());
 			return MessageResponseDto.success(inventarioDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ningún inventario con ese id");
+			return MessageResponseDto.fail(messageSource.getMessage("inventarioNoExiste", null, locale));
 		}
 	}
 
@@ -174,8 +185,9 @@ public class InventarioProviderImpl implements InventarioProvider{
 
 	@Override
 	public MessageResponseDto<List<InventarioDto>> listInventarioByOficina(Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<InventarioEntity> listaEntity = this.inventarioRepository.findByIdOficinaOrderByArticuloReferenciaAsc(idOficina);
 		List<InventarioDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
@@ -184,8 +196,9 @@ public class InventarioProviderImpl implements InventarioProvider{
 
 	@Override
 	public MessageResponseDto<List<InventarioDto>> listInventarioByArticulo(Integer idArticulo) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.articuloProvider.articuloExisteByID(idArticulo)) {
-			return MessageResponseDto.fail("El artículo no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("articuloNoExiste", null, locale));
 		}
 		List<InventarioEntity> listaEntity = this.inventarioRepository.findByCodArticulo(idArticulo);
 		List<InventarioDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,6 +27,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -96,6 +99,9 @@ public class PedidoProviderImpl implements PedidoProvider {
 
 	@Autowired
 	private InventarioProvider inventarioProvider;
+	
+	@Autowired
+    private MessageSource messageSource;
 
 	@Autowired
 	private ArticuloProvider articuloProvider;
@@ -150,39 +156,40 @@ public class PedidoProviderImpl implements PedidoProvider {
 	@Transactional
 	@Override
 	public MessageResponseDto<?> addPedido(PedidoDto pedido) {
+		Locale locale = LocaleContextHolder.getLocale();
 
 		if (pedido.getNumeroPedido() != null && pedidoRepository.findById(pedido.getNumeroPedido()).isPresent()) {
-			return MessageResponseDto.fail("El pedido ya existe");
+			return MessageResponseDto.fail(messageSource.getMessage("pedidoExiste", null, locale));
 		}
 
 		pedido.setFechaPedido(LocalDate.now());
 
 		if (pedido.getIvaPedido() == 0) {
-			return MessageResponseDto.fail("El iva es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("ivaObl", null, locale));
 		}
 
 		if (pedido.getIdEmpleado() == null || !this.empleadoProvider.empleadoExisteByCodigo(pedido.getIdEmpleado())) {
-			return MessageResponseDto.fail("El empleado no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("empleadoNoExiste", null, locale));
 		}
 		if (pedido.getPlazoEntrega() == null || pedido.getPlazoEntrega() <= 0) {
-			return MessageResponseDto.fail("El plazo de entrega debe ser un día como mínimo");
+			return MessageResponseDto.fail(messageSource.getMessage("plazoEntregaMin", null, locale));
 
 		}
 		if (pedido.getIdProveedor() == null || !this.proveedorProvider.proveedorExisteByID(pedido.getIdProveedor())) {
-			return MessageResponseDto.fail("El proveedor no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("proveedorNoExiste", null, locale));
 		}
 		if (pedido.getIdOficina() == null || !this.oficinaProvider.oficinaExisteByID(pedido.getIdOficina())) {
-			return MessageResponseDto.fail("La oficina no existe no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		if (pedido.getFechaRecepcion() != null && pedido.getFechaRecepcion().isBefore(pedido.getFechaPedido())) {
-			return MessageResponseDto.fail("La fecha de recepción no puede ser anterior a la de envío");
+			return MessageResponseDto.fail(messageSource.getMessage("fechaRecepcionEnvio", null, locale));
 		}
 		if (pedido.getCondicionPago() == null
 				|| !this.condiconProvider.condicionExisteByCodigo(pedido.getCondicionPago())) {
-			return MessageResponseDto.fail("La condición de pago no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("condicionNoExiste", null, locale));
 		}
 		if (pedido.getMedioPago() == null || !this.medioProvider.medioExisteByCodigo(pedido.getMedioPago())) {
-			return MessageResponseDto.fail("El medio de pago no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("medioNoExiste", null, locale));
 		}
 
 		List<LineaDto> listLinea = pedido.getLineas();
@@ -224,6 +231,8 @@ public class PedidoProviderImpl implements PedidoProvider {
 
 	@Override
 	public MessageResponseDto<String> editPedido(PedidoDto pedido, Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(id);
 		if (optionalPedido.isPresent()) {
 			PedidoEntity pedidoToUpdate = optionalPedido.get();
@@ -232,10 +241,10 @@ public class PedidoProviderImpl implements PedidoProvider {
 
 			pedidoRepository.save(pedidoToUpdate);
 
-			return MessageResponseDto.success("Pedido editado con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("pedidoEditado", null, locale));
 
 		} else {
-			return MessageResponseDto.fail("El pedido que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("pedidoNoExiste", null, locale));
 		}
 	}
 
@@ -280,6 +289,8 @@ public class PedidoProviderImpl implements PedidoProvider {
 
 	@Override
 	public MessageResponseDto<PedidoDto> getPedidoById(Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(id);
 		if (optionalPedido.isPresent()) {
 			PedidoDto pedidoDto = this.convertToMapDto(optionalPedido.get());
@@ -304,7 +315,7 @@ public class PedidoProviderImpl implements PedidoProvider {
 
 			return MessageResponseDto.success(pedidoDto);
 		} else {
-			return MessageResponseDto.fail("No se encuentra ningún pedido con ese id");
+			return MessageResponseDto.fail(messageSource.getMessage("pedidoNoExiste", null, locale));
 		}
 	}
 
@@ -316,9 +327,9 @@ public class PedidoProviderImpl implements PedidoProvider {
 
 	@Override
 	public MessageResponseDto<List<PedidoDto>> listPedidoByProveedor(Integer idProveedor) {
-
+		Locale locale = LocaleContextHolder.getLocale();
 		if (!this.proveedorProvider.proveedorExisteByID(idProveedor)) {
-			return MessageResponseDto.fail("El proveedor no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("proveedorNoExiste", null, locale));
 		}
 		List<PedidoEntity> listaPedioEntity = this.pedidoRepository.findByIdProveedor(idProveedor);
 		List<PedidoDto> listapedidoDto = listaPedioEntity.stream().map(this::convertToMapDto)
@@ -329,8 +340,9 @@ public class PedidoProviderImpl implements PedidoProvider {
 
 	@Override
 	public MessageResponseDto<List<PedidoDto>> listPedidoByOficina(Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if (!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<PedidoEntity> listaPedioEntity = this.pedidoRepository.findByIdOficina(idOficina);
 		List<PedidoDto> listapedidoDto = listaPedioEntity.stream().map(this::convertToMapDto)
@@ -450,6 +462,8 @@ public class PedidoProviderImpl implements PedidoProvider {
 	@Override
 	@Transactional
 	public MessageResponseDto<String> marcarRecibido(Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(id);
 		if (optionalPedido.isPresent()) {
 			PedidoEntity pedidoToUpdate = optionalPedido.get();
@@ -488,22 +502,23 @@ public class PedidoProviderImpl implements PedidoProvider {
 				}
 			}
 
-			return MessageResponseDto.success("Pedido recibido");
+			return MessageResponseDto.success(messageSource.getMessage("pedidoRecibido", null, locale));
 
 		} else {
-			return MessageResponseDto.fail("El pedido que se desea marcar como recibido no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("pedidoNoExiste", null, locale));
 		}
 	}
 
 	@Override
 	@Transactional
 	public MessageResponseDto<String> devolverPedido(Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<PedidoEntity> optionalPedido = pedidoRepository.findById(id);
 		if (optionalPedido.isPresent()) {
 			PedidoEntity pedidoToUpdate = optionalPedido.get();
 
 			if (pedidoToUpdate.getFechaRecepcion() == null) {
-				return MessageResponseDto.fail("No se puede devolver un pedio que no se ha recibido");
+				return MessageResponseDto.fail(messageSource.getMessage("pedidoDevolverNoRecibido", null, locale));
 			}
 
 			OficinaDto of = oficinaProvider.getOficinaById(pedidoToUpdate.getIdOficina()).getMessage();
@@ -521,8 +536,7 @@ public class PedidoProviderImpl implements PedidoProvider {
 							art.getCodigoArticulo());
 
 					if (inventario.getMessage().getStock() - linea.getNumeroUnidades() < 0) {
-						return MessageResponseDto.fail(
-								"No se puede devolver el pedido, ya se le ha dado salida a alguno de los productos");
+						return MessageResponseDto.fail(messageSource.getMessage("pedidoYaSalida", null, locale));
 					}
 					if (inventario.isSuccess()) {
 						inventarioDto = new InventarioDto(art.getCodigoArticulo(), pedidoToUpdate.getIdOficina(),
@@ -530,8 +544,7 @@ public class PedidoProviderImpl implements PedidoProvider {
 						msgInventario = inventarioProvider.editInventario(inventarioDto, pedidoToUpdate.getIdOficina(),
 								art.getCodigoArticulo());
 					} else {
-						return MessageResponseDto.fail(
-								"No se puede devolver el pedido, ya se le ha dado salida a alguno de los productos");
+						return MessageResponseDto.fail(messageSource.getMessage("pedidoYaSalida", null, locale));
 					}
 					if (!msgInventario.isSuccess()) {
 						return MessageResponseDto.fail(msgInventario.getError());
@@ -543,10 +556,10 @@ public class PedidoProviderImpl implements PedidoProvider {
 
 			pedidoRepository.save(pedidoToUpdate);
 
-			return MessageResponseDto.success("Pedido devuelto");
+			return MessageResponseDto.success(messageSource.getMessage("pedidoDevuelto", null, locale));
 
 		} else {
-			return MessageResponseDto.fail("El pedido que se desea devolver no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("pedidoNoExiste", null, locale));
 		}
 	}
 

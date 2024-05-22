@@ -2,12 +2,15 @@ package com.tfg.inventariado.providerImpl;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.CondicionPagoDto;
@@ -24,6 +27,9 @@ public class CondicionPagoProviderImpl implements CondicionPagoProvider {
 	
 	@Autowired
 	private ModelMapper modelMapper;
+	
+	@Autowired
+    private MessageSource messageSource;
 	
 	@Override
 	public CondicionPagoDto convertToMapDto(CondicionPagoEntity condicion) {
@@ -45,22 +51,24 @@ public class CondicionPagoProviderImpl implements CondicionPagoProvider {
 
 	@Override
 	public MessageResponseDto<String> addCondicionPago(CondicionPagoDto condicion) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(condicion.getCodigoCondicion()==null || condicion.getCodigoCondicion().isEmpty()) {
-			return MessageResponseDto.fail("El código es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("codigoObl", null, locale));
 		}
 		if(condicion.getDescripcion()==null || condicion.getDescripcion().isEmpty()) {
-			return MessageResponseDto.fail("La descripción es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("descripcionObligatoria", null, locale));
 		}
 		if(condicionExisteByCodigo(condicion.getCodigoCondicion())) {
-			return MessageResponseDto.fail("La condicion ya existe");
+			return MessageResponseDto.fail(messageSource.getMessage("condicionExiste", null, locale));
 		}
 		CondicionPagoEntity newCondicion = convertToMapEntity(condicion);
 		newCondicion = condicionPagoRepository.save(newCondicion);
-		return MessageResponseDto.success("Condición de pago añadida con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("condicionAnadida", null, locale));
 	}
 
 	@Override
 	public MessageResponseDto<String> editCondicionPago(CondicionPagoDto condicion, String codigoCondicion) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<CondicionPagoEntity> optionalCondicion = condicionPagoRepository.findById(codigoCondicion);
 		if(optionalCondicion.isPresent()) {
 			CondicionPagoEntity condicionToUpdate = optionalCondicion.get();
@@ -69,10 +77,10 @@ public class CondicionPagoProviderImpl implements CondicionPagoProvider {
 			
 			condicionPagoRepository.save(condicionToUpdate);
 			
-			return MessageResponseDto.success("Condición de pago editada con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("condicionEditada", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("La condición de pago que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("condicionNoExiste", null, locale));
 		}
 	}
 
@@ -84,12 +92,13 @@ public class CondicionPagoProviderImpl implements CondicionPagoProvider {
 	
 	@Override
 	public MessageResponseDto<CondicionPagoDto> getCondicionPagoById(String codigoCondicion) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<CondicionPagoEntity> optionalCondicion = condicionPagoRepository.findById(codigoCondicion);
 		if(optionalCondicion.isPresent()) {
 			CondicionPagoDto condicionDto = this.convertToMapDto(optionalCondicion.get());
 			return MessageResponseDto.success(condicionDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ninguna condición de pago con ese código");
+			return MessageResponseDto.fail(messageSource.getMessage("condicionNoExiste", null, locale));
 		}
 	}
 

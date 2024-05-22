@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -57,6 +60,9 @@ public class HistorialInventarioProviderImpl implements HistorialInventarioProvi
 	@Autowired
 	private ArticuloProvider articuloProvider;
 	
+	@Autowired
+    private MessageSource messageSource;
+	
 	@Override
 	public HistorialInventarioDto convertToMapDto(HistorialInventarioEntity historial) {
 		return modelMapper.map(historial, HistorialInventarioDto.class);
@@ -76,40 +82,43 @@ public class HistorialInventarioProviderImpl implements HistorialInventarioProvi
 	@Transactional
 	@Override
 	public MessageResponseDto<String> addHistorial(HistorialInventarioDto historial) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		HistorialInventarioEntityID id = new HistorialInventarioEntityID(historial.getCodArticulo(), historial.getIdOficina(), historial.getFecha());
 		if(historialRepository.findById(id).isPresent()) {
-			return MessageResponseDto.fail("El historial ya existe");
+			return MessageResponseDto.fail(messageSource.getMessage("historialExiste", null, locale));
 		}
 		if(historial.getCodArticulo()==null) {
-			return MessageResponseDto.fail("El codigo de artículo es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("codigoObl", null, locale));
 		}
 		if(historial.getIdOficina()==null) {
-			return MessageResponseDto.fail("La oficina es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaObl", null, locale));
 		}
 		if(historial.getStock()==null) {
-			return MessageResponseDto.fail("El stock es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("stockObl", null, locale));
 		}
 		if(!this.articuloProvider.articuloExisteByID(historial.getCodArticulo())) {
-			return MessageResponseDto.fail("El artículo no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("articuloNoExiste", null, locale));
 		}
 		if(!this.oficinaProvider.oficinaExisteByID(historial.getIdOficina())) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		if( historial.getFecha() == null) {
-			return MessageResponseDto.fail("La fecha es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("fechaObl", null, locale));
 		}
 		if( historial.getFecha().isAfter(LocalDateTime.now())) {
-			return MessageResponseDto.fail("La fecha no puede ser posterior a la actual");
+			return MessageResponseDto.fail(messageSource.getMessage("fechaPost", null, locale));
 		}
 		HistorialInventarioEntity newHistorial = convertToMapEntity(historial);
 		newHistorial = historialRepository.save(newHistorial);
-		return MessageResponseDto.success("Historial añadido con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("historialAnadido", null, locale));
 	}
 
 	@Transactional
 	@Override
 	public MessageResponseDto<String> editHistorial(HistorialInventarioDto historial, Integer idOf, Integer idArt,
 			LocalDateTime fecha) {
+		Locale locale = LocaleContextHolder.getLocale();
 		HistorialInventarioEntityID id = new HistorialInventarioEntityID(idArt, idOf, fecha);
 		Optional<HistorialInventarioEntity> optionalHistorial = historialRepository.findById(id);
 		if(optionalHistorial.isPresent()) {
@@ -119,10 +128,10 @@ public class HistorialInventarioProviderImpl implements HistorialInventarioProvi
 			
 			historialRepository.save(historialToUpdate);
 			
-			return MessageResponseDto.success("Historial editado con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("historialEditado", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("El historial que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("historialNoExiste", null, locale));
 		}
 	}
 
@@ -133,20 +142,22 @@ public class HistorialInventarioProviderImpl implements HistorialInventarioProvi
 	}
 	@Override
 	public MessageResponseDto<HistorialInventarioDto> getHistorialById(Integer idOf, Integer idArt, LocalDateTime fecha) {
+		Locale locale = LocaleContextHolder.getLocale();
 		HistorialInventarioEntityID id = new HistorialInventarioEntityID(idArt, idOf, fecha);
 		Optional<HistorialInventarioEntity> optionalHistorial = historialRepository.findById(id);
 		if(optionalHistorial.isPresent()) {
 			HistorialInventarioDto historialDto = this.convertToMapDto(optionalHistorial.get());
 			return MessageResponseDto.success(historialDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ningún historial con ese id");
+			return MessageResponseDto.fail(messageSource.getMessage("historialNoExiste", null, locale));
 		}
 	}
 
 	@Override
 	public MessageResponseDto<List<HistorialInventarioDto>> listHistorialByOficina(Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<HistorialInventarioEntity> listaEntity = this.historialRepository.findByIdOficina(idOficina);
 		List<HistorialInventarioDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
@@ -155,8 +166,9 @@ public class HistorialInventarioProviderImpl implements HistorialInventarioProvi
 
 	@Override
 	public MessageResponseDto<List<HistorialInventarioDto>> listHistorialByArticulo(Integer idArticulo) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.articuloProvider.articuloExisteByID(idArticulo)) {
-			return MessageResponseDto.fail("El artículo no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("articuloNoExiste", null, locale));
 		}
 		List<HistorialInventarioEntity> listaEntity = this.historialRepository.findByCodArticulo(idArticulo);
 		List<HistorialInventarioDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());

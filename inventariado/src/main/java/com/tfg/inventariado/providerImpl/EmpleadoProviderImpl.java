@@ -3,6 +3,7 @@ package com.tfg.inventariado.providerImpl;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -14,6 +15,8 @@ import javax.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -60,6 +63,9 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 	
 	@Autowired
 	private JwtProvider jwtProvider;
+	
+	@Autowired
+    private MessageSource messageSource;
 
 	@Override
 	public EmpleadoDto convertToMapDto(EmpleadoEntity empleado) {
@@ -81,33 +87,34 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 
 	@Override
 	public MessageResponseDto<Integer> addEmpleado(EmpleadoDto empleado) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if (empleado.getApellidos() == null || empleado.getApellidos().isEmpty()) {
-			return MessageResponseDto.fail("El apellido es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("apellObl", null, locale));
 		}
 		if (empleado.getUsuario() == null || empleado.getUsuario().isEmpty()) {
-			return MessageResponseDto.fail("El usuario es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("usuarioObl", null, locale));
 		}
 		if (empleado.getContraseña() == null || empleado.getContraseña().isEmpty()) {
-			return MessageResponseDto.fail("La contraseña es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("contraObl", null, locale));
 		}
 		if (empleado.getCodRol() == null || empleado.getCodRol().isEmpty()) {
-			return MessageResponseDto.fail("El rol es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("rolObl", null, locale));
 		}
 		if (!this.rolProvider.rolExisteByCodigo(empleado.getCodRol())) {
-			return MessageResponseDto.fail("No se puede añadir el empleado, el rol no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("rolNoExiste", null, locale));
 		}
 		if (empleado.getCodRol() != null && !empleado.getCodRol().isEmpty()
 				&& !this.oficinaProvider.oficinaExisteByID(empleado.getIdOficina())) {
-			return MessageResponseDto.fail("No se puede añadir el empleado, la oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		if (this.empleadoExisteByUsuario(empleado.getUsuario())) {
-			return MessageResponseDto.fail("No se puede añadir el empleado, el usuario ya existe");
+			return MessageResponseDto.fail(messageSource.getMessage("usuarieExiste", null, locale));
 		}
 		if (this.empleadoRepository.findByDni(empleado.getDni()).isPresent()) {
-			return MessageResponseDto.fail("No se puede añadir el empleado, el dni ya se está usando");
+			return MessageResponseDto.fail(messageSource.getMessage("dniUso", null, locale));
 		}
 		if (empleado.getNombre() == null || empleado.getNombre().isEmpty()) {
-			return MessageResponseDto.fail("El nombre es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("nombreObl", null, locale));
 		}
 		EmpleadoEntity newEmpleado = convertToMapEntity(empleado);
 		
@@ -120,6 +127,7 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 
 	@Override
 	public MessageResponseDto<String> editEmpleado(EmpleadoDto empleado, Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<EmpleadoEntity> optionalEmpleado = empleadoRepository.findById(id);
 		if (optionalEmpleado.isPresent()) {
 			EmpleadoEntity empleadoToUpdate = optionalEmpleado.get();
@@ -133,26 +141,28 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 			return respuesta;
 
 		} else {
-			return MessageResponseDto.fail("El empleado que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("empleadoNoExiste", null, locale));
 		}
 	}
 
 	private MessageResponseDto<String> actualizarCampos(EmpleadoEntity empleado, EmpleadoDto empleadoToUpdate) {
 
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		String patronDNI = "\\d{8}[A-HJ-NP-TV-Z]";
 		Pattern pattern = Pattern.compile(patronDNI);
 		Matcher matcher = pattern.matcher(empleadoToUpdate.getDni());
 
 		if (!matcher.matches()) {
-			return MessageResponseDto.fail("DNI inválido");
+			return MessageResponseDto.fail(messageSource.getMessage("dniInvalido", null, locale));
 		}
 		
 		if (this.empleadoRepository.findByDni(empleadoToUpdate.getDni()).isPresent() && !empleado.getDni().equals(empleadoToUpdate.getDni())) {
-			return MessageResponseDto.fail("DNI en uso");
+			return MessageResponseDto.fail(messageSource.getMessage("dniUso", null, locale));
 		}
 		
 		if (this.empleadoExisteByUsuario(empleadoToUpdate.getUsuario()) && !empleado.getUsuario().equals(empleadoToUpdate.getUsuario())) {
-			return MessageResponseDto.fail("Usuario en uso");
+			return MessageResponseDto.fail(messageSource.getMessage("usuarieExiste", null, locale));
 		}
 		
 		if (matcher.matches() && !this.empleadoRepository.findByDni(empleadoToUpdate.getDni()).isPresent()) {
@@ -182,25 +192,26 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 			empleado.setIdOficina(empleadoToUpdate.getIdOficina());
 		}
 		
-		return MessageResponseDto.success("Empledo editado con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("empleadoEditado", null, locale));
 	}
 
 	@Override
 	public MessageResponseDto<EmpleadoDto> getEmpleadoById(Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<EmpleadoEntity> optionalEmpleado = this.empleadoRepository.findById(id);
 		if (optionalEmpleado.isPresent()) {
 			EmpleadoDto empleadoDto = this.convertToMapDto(optionalEmpleado.get());
 			return MessageResponseDto.success(empleadoDto);
 		} else {
-			return MessageResponseDto.fail("No se encuentra el empleado con ese identificador");
+			return MessageResponseDto.fail(messageSource.getMessage("empleadoNoExiste", null, locale));
 		}
 	}
 
 	@Override
 	public MessageResponseDto<List<EmpleadoDto>> listEmpleadosByOficina(Integer idOficina) {
-
+		Locale locale = LocaleContextHolder.getLocale();
 		if (!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<EmpleadoEntity> listaEntity = this.empleadoRepository.findByIdOficina(idOficina);
 		List<EmpleadoDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
@@ -209,8 +220,9 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 
 	@Override
 	public MessageResponseDto<List<EmpleadoDto>> listEmpleadosByRol(String codRol) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if (!this.rolProvider.rolExisteByCodigo(codRol)) {
-			return MessageResponseDto.fail("El rol no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("rolNoExiste", null, locale));
 		}
 		List<EmpleadoEntity> listaEntity = this.empleadoRepository.findByCodRol(codRol);
 		List<EmpleadoDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
@@ -298,14 +310,14 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 
 	@Override
 	public MessageResponseDto<String> editContrasenaEmpleado(EmpleadoCambioContrasena empleado) {
-		
+		Locale locale = LocaleContextHolder.getLocale();
 		if(empleado.getContraNueva().equals(empleado.getContraAct())) {
-			return MessageResponseDto.fail("La contraseña nueva no puede ser la misma que la actual");
+			return MessageResponseDto.fail(messageSource.getMessage("contrasenaRepit", null, locale));
 		}
 		
 		Optional<EmpleadoEntity> optionalEmpleado = empleadoRepository.findById(empleado.getEmpleado().getIdEmpleado());
 		if (!optionalEmpleado.isPresent()) {
-			return MessageResponseDto.fail("El empleado que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("empleadoNoExiste", null, locale));
 		}
 		
 		
@@ -314,7 +326,7 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
 		if (!passwordEncoder.matches(empleado.getContraAct(), empleadoBD.getContraseña())) {
-	        return MessageResponseDto.fail("La contraseña actual es incorrecta");
+	        return MessageResponseDto.fail(messageSource.getMessage("contrasenaIncorrecta", null, locale));
 	    }
 
 		empleadoBD.setContraseña(passwordEncoder.encode(empleado.getContraNueva()));
@@ -322,7 +334,7 @@ public class EmpleadoProviderImpl implements EmpleadoProvider {
 		
 		empleadoRepository.save(empleadoBD);
 
-		return MessageResponseDto.success("Contraseña actualizada con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("contrasenaAct", null, locale));
 
 	}
 	

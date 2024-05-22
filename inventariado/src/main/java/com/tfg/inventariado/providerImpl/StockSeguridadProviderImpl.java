@@ -2,11 +2,14 @@ package com.tfg.inventariado.providerImpl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -61,6 +64,9 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 	@Autowired
 	private CategoriaProvider categoriaProvider;
 	
+	@Autowired
+    private MessageSource messageSource;
+	
 	@Override
 	public StockSeguridadDto convertToMapDto(StockSeguridadEntity seguridad) {
 		return modelMapper.map(seguridad, StockSeguridadDto.class);
@@ -78,26 +84,29 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 	}
 	
 	private MessageResponseDto<String> validaSS(StockSeguridadDto seguridad) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		if(seguridad.getCodCategoria()==null || !this.categoriaProvider.categoriaExisteByCodigo(seguridad.getCodCategoria())) {
-			return MessageResponseDto.fail("La categoría no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("categoriaNoExiste", null, locale));
 		}
 		if(seguridad.getCodSubcategoria()==null || !this.subcategoriaProvider.subcategoriaExisteByID(seguridad.getCodCategoria(),seguridad.getCodSubcategoria())) {
-			return MessageResponseDto.fail("La subcategoría no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("subcategoriaNoExiste", null, locale));
 		}
 		if(seguridad.getIdOficina()==null || !this.oficinaProvider.oficinaExisteByID(seguridad.getIdOficina())) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		if(seguridad.getCantidad()==null || seguridad.getCantidad()<=0) {
-			return MessageResponseDto.fail("Como mínimo la cantidad debe ser uno");
+			return MessageResponseDto.fail(messageSource.getMessage("cantidadMinimo", null, locale));
 		}
 		if(seguridad.getPlazoEntregaMedio()==null || seguridad.getPlazoEntregaMedio()<=0) {
-			return MessageResponseDto.fail("Como mínimo el plazo de entrega medio debe ser uno");
+			return MessageResponseDto.fail(messageSource.getMessage("plazoEntregaMinimo", null, locale));
 		}
-		return MessageResponseDto.success("correcto");
+		return MessageResponseDto.success(messageSource.getMessage("correcto", null, locale));
 	}
 
 	@Override
 	public MessageResponseDto<String> addStockSteguridad(StockSeguridadDto seguridad) {
+		Locale locale = LocaleContextHolder.getLocale();
 		MessageResponseDto<String> validacion1 = this.validaSS(seguridad);
 		if(!validacion1.isSuccess()) {
 			return validacion1;
@@ -106,7 +115,7 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		StockSeguridadEntityID id = new StockSeguridadEntityID(seguridad.getCodSubcategoria(), seguridad.getCodCategoria(), seguridad.getIdOficina());
 		
 		if(stockSeguridadRepository.findById(id).isPresent()) {
-			return MessageResponseDto.fail("El stock de seguridad ya existe, debe editarlo");
+			return MessageResponseDto.fail(messageSource.getMessage("ssExiste", null, locale));
 		}
 		
 		StockSeguridadEntity newStock = convertToMapEntity(seguridad);
@@ -114,13 +123,13 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 		
 		StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
 		
-		return MessageResponseDto.success("Stock de seguridad añadido con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("ssAnadido", null, locale));
 	}
 
 	@Override
 	public MessageResponseDto<String> editStockSeguridad(StockSeguridadDto seguridad, String cat, String subCat,
 			Integer idOficina) {
-		
+		Locale locale = LocaleContextHolder.getLocale();
 		StockSeguridadEntityID id = new StockSeguridadEntityID(subCat, cat, idOficina);
 		Optional<StockSeguridadEntity> optionalStockSeguridad= stockSeguridadRepository.findById(id);
 
@@ -134,10 +143,10 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 			
 			StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
 			
-			return MessageResponseDto.success("Stock de seguridad editado con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("ssEditado", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("El stock de seguridad que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("ssNoExiste", null, locale));
 		}
 	}
 
@@ -154,20 +163,24 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 	
 	@Override
 	public MessageResponseDto<StockSeguridadDto> getStockSeguridadById(String cat, String subCat, Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		StockSeguridadEntityID id = new StockSeguridadEntityID(subCat, cat, idOficina);
 		Optional<StockSeguridadEntity> optional= stockSeguridadRepository.findById(id);
 		if(optional.isPresent()) {
 			StockSeguridadDto sueguridadDto = this.convertToMapDto(optional.get());
 			return MessageResponseDto.success(sueguridadDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ningún stock de seguridad con ese id");
+			return MessageResponseDto.fail(messageSource.getMessage("ssNoExiste", null, locale));
 		}
 	}
 
 	@Override
 	public MessageResponseDto<List<StockSeguridadDto>> listStockSeguridadByOficina(Integer idOficina) {
+		
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<StockSeguridadEntity> listaEntity = this.stockSeguridadRepository.findByIdOficina(idOficina);
 		List<StockSeguridadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
@@ -176,8 +189,9 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 
 	@Override
 	public MessageResponseDto<List<StockSeguridadDto>> listStockSeguridadBySubcategoria(String cat, String subCat) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.subcategoriaProvider.subcategoriaExisteByID(cat,subCat)) {
-			return MessageResponseDto.fail("La subcategoria no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("subcategoriaNoExiste", null, locale));
 		}
 		List<StockSeguridadEntity> listaEntity = this.stockSeguridadRepository.findByCodCategoriaAndCodSubcategoria(cat,subCat);
 		List<StockSeguridadDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
@@ -259,7 +273,7 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 
 			return MessageResponseDto.success(avisosList);
 		} catch (Exception e) {
-			return MessageResponseDto.fail("Se ha producido un error interno al recuperar los datos" + e.toString());
+			return MessageResponseDto.fail("Error" + e.toString());
 		}
     }
 	
@@ -291,7 +305,7 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 			StockSeguridadProviderImpl.setHayAvisos(false);
 			return MessageResponseDto.success(false);
 		} catch (Exception e) {
-			return MessageResponseDto.fail("Se ha producido un error interno al recuperar los datos" + e.toString());
+			return MessageResponseDto.fail("Error" + e.toString());
 		}
     }
 	
@@ -319,13 +333,14 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 	
 	
 	private MessageResponseDto<String> guardar(List<StockSeguridadDto> seguridad, int idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		List<StockSeguridadEntity> listaEntity = seguridad.stream().map(this::convertToMapEntity).collect(Collectors.toList());
 		this.stockSeguridadRepository.deleteByIdOficina(idOficina);
 		this.stockSeguridadRepository.saveAll(listaEntity);
 		
 		StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
 		
-		return MessageResponseDto.success("Stock de seguridad guardado con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("ssGuardado", null, locale));
 	}
 	
 	
@@ -357,11 +372,12 @@ public class StockSeguridadProviderImpl implements StockSeguridadProvider {
 	@Override
 	@Transactional
 	public MessageResponseDto<String> vaciarStockByOf(Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("ssGuardado", null, locale));
 		}
 		this.stockSeguridadRepository.deleteByIdOficina(idOficina);
 		StockSeguridadProviderImpl.setHayAvisos(this.compruebaAvisos());
-		return MessageResponseDto.success("Stock de seguridad guardado con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("oficinaNoExiste", null, locale));
 	}
 }

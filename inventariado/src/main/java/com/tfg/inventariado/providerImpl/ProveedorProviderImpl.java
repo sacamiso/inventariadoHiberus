@@ -2,12 +2,15 @@ package com.tfg.inventariado.providerImpl;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -31,6 +34,9 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 	@Autowired
 	private ModelMapper modelMapper;
 	
+	@Autowired
+    private MessageSource messageSource;
+	
 	@Override
 	public ProveedorDto convertToMapDto(ProveedorEntity proveedor) {
 		return modelMapper.map(proveedor, ProveedorDto.class);
@@ -51,30 +57,31 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 
 	@Override
 	public MessageResponseDto<Integer> addProveedor(ProveedorDto proveedor) {
+		Locale locale = LocaleContextHolder.getLocale();
 		
 		if(proveedor.getCif()==null || !StringUtils.isNotBlank(proveedor.getCif())) {
-			return MessageResponseDto.fail("El CIF es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("cifObl", null, locale));
 		}
 		if(proveedorRepository.findByCif(proveedor.getCif()).isPresent()) {
-			return MessageResponseDto.fail("Ya existe un proveedor con ese CIF");
+			return MessageResponseDto.fail(messageSource.getMessage("cifExiste", null, locale));
 		}
 		if(proveedor.getRazonSocial()==null || !StringUtils.isNotBlank(proveedor.getRazonSocial())) {
-			return MessageResponseDto.fail("La razon social es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("razonSocialObl", null, locale));
 		}
 		if(proveedor.getDireccion()==null || !StringUtils.isNotBlank(proveedor.getDireccion())) {
-			return MessageResponseDto.fail("La dirección es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("direccionObl", null, locale));
 		}
 		if(proveedor.getCodigoPostal()!= null && proveedor.getCodigoPostal()<=0) {
-			return MessageResponseDto.fail("El código postal es incorrecto");
+			return MessageResponseDto.fail(messageSource.getMessage("codigoPostalInvalido", null, locale));
 		}
 		if(proveedor.getLocalidad()==null || !StringUtils.isNotBlank(proveedor.getLocalidad())) {
-			return MessageResponseDto.fail("La localidad es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("localidadObl", null, locale));
 		}
 		if(proveedor.getTelefono()==null || !StringUtils.isNotBlank(proveedor.getTelefono())) {
-			return MessageResponseDto.fail("El teléfono es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("telefonoObl", null, locale));
 		}
 		if(proveedor.getEmail()==null || !StringUtils.isNotBlank(proveedor.getEmail())) {
-			return MessageResponseDto.fail("El email es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("emailObl", null, locale));
 		}
 		ProveedorEntity newProveedor = convertToMapEntity(proveedor);
 		newProveedor = proveedorRepository.save(newProveedor);
@@ -83,6 +90,7 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 
 	@Override
 	public MessageResponseDto<String> editProveedor(ProveedorDto proveedor, Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<ProveedorEntity> optionalProveedor = proveedorRepository.findById(id);
 		if(optionalProveedor.isPresent()) {
 			ProveedorEntity proveedorToUpdate = optionalProveedor.get();
@@ -95,18 +103,19 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 			return respuesta;
 			
 		}else {
-			return MessageResponseDto.fail("El proveedor que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("proveedorNoExiste", null, locale));
 		}
 	}
 
 	private MessageResponseDto<String> actualizarCampos(ProveedorEntity proveedor, ProveedorDto proveedorToUpdate) {
+		Locale locale = LocaleContextHolder.getLocale();
 		
 		if( proveedorRepository.findByCif(proveedorToUpdate.getCif()).isPresent() && !proveedor.getCif().equals(proveedorToUpdate.getCif())) {
-			return MessageResponseDto.fail("CIF en uso");
+			return MessageResponseDto.fail(messageSource.getMessage("cifExiste", null, locale));
 		}
 		String cp = String.valueOf(proveedorToUpdate.getCodigoPostal());
 		if(cp.length() != 5) {
-			return MessageResponseDto.fail("Código postal inválido");
+			return MessageResponseDto.fail(messageSource.getMessage("codigoPostalInvalido", null, locale));
 		}
 		if(StringUtils.isNotBlank(proveedorToUpdate.getCif()) && !proveedorRepository.findByCif(proveedorToUpdate.getCif()).isPresent()) {
 			proveedor.setCif(proveedorToUpdate.getCif());
@@ -132,18 +141,19 @@ public class ProveedorProviderImpl implements ProveedorProvider {
 			proveedor.setEmail(proveedorToUpdate.getEmail());
 		}
 		
-		return MessageResponseDto.success("Proveedor editado con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("proveedorEditado", null, locale));
 
 	}
 	
 	@Override
 	public MessageResponseDto<ProveedorDto> getProveedorById(Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<ProveedorEntity> optionalProveedor = proveedorRepository.findById(id);
 		if(optionalProveedor.isPresent()) {
 			ProveedorDto proveedorDto = this.convertToMapDto(optionalProveedor.get());
 			return MessageResponseDto.success(proveedorDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ningún proveedor con ese id");
+			return MessageResponseDto.fail(messageSource.getMessage("proveedorNoExiste", null, locale));
 		}
 	}
 

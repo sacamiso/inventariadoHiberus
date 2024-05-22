@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -62,6 +65,9 @@ public class SalidaProviderImpl implements SalidaProvider {
 	@Autowired
 	private InventarioProvider inventarioProvider;
 	
+	@Autowired
+    private MessageSource messageSource;
+	
 	@Override
 	public SalidaDto convertToMapDto(SalidaEntity salida) {
 		return modelMapper.map(salida, SalidaDto.class);
@@ -84,33 +90,35 @@ public class SalidaProviderImpl implements SalidaProvider {
 	@Transactional
 	@Override
 	public MessageResponseDto<Integer> addSalida(SalidaDto salida) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		if(salida.getNumUnidades()==null) {
-			return MessageResponseDto.fail("El número de unidades es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("numUnidadesSalObl", null, locale));
 		}
 		if(salida.getIdOficina()==null) {
-			return MessageResponseDto.fail("El id de oficina es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaObl", null, locale));
 		}
 		if(salida.getCodArticulo()==null) {
-			return MessageResponseDto.fail("El artículo es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("articuloObl", null, locale));
 		}
 		if(!this.articuloProvider.articuloExisteByID(salida.getCodArticulo())) {
-			return MessageResponseDto.fail("El artículo no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("articuloNoExiste", null, locale));
 		}
 		if(!this.oficinaProvider.oficinaExisteByID(salida.getIdOficina())) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		MessageResponseDto<InventarioDto> inventario = inventarioProvider.getInventarioById(salida.getIdOficina(), salida.getCodArticulo());
 		if(!inventario.isSuccess()) {
-			return MessageResponseDto.fail("No se puede dar salida a artículos que no están inventariados");
+			return MessageResponseDto.fail(messageSource.getMessage("noSalidaNoInv", null, locale));
 		}
 		if(inventario.getMessage().getStock() < salida.getNumUnidades()) {
-			return MessageResponseDto.fail("No se puede dar salida a más artículos de los existentes");
+			return MessageResponseDto.fail(messageSource.getMessage("noSalidaMasStock", null, locale));
 		}
 		if(salida.getFechaSalida()== null) {
 			salida.setFechaSalida(LocalDate.now());
 		}
 		if(salida.getFechaSalida().isAfter(LocalDate.now())) {
-			return MessageResponseDto.fail("La fecha no puede ser posterior a la actual");
+			return MessageResponseDto.fail(messageSource.getMessage("fechaPost", null, locale));
 		}
 		
 		OficinaDto of = oficinaProvider.getOficinaById(salida.getIdOficina()).getMessage();
@@ -130,24 +138,25 @@ public class SalidaProviderImpl implements SalidaProvider {
 	@Transactional
 	@Override
 	public MessageResponseDto<String> editSalida(SalidaDto salida, Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<SalidaEntity> optionalSalida = saldiaRepository.findById(id);
 		if(optionalSalida.isPresent()) {
 			
 			if(salida.getCodArticulo()!= 0 && !this.articuloProvider.articuloExisteByID(salida.getCodArticulo())) {
-				return MessageResponseDto.fail("El artículo no existe");
+				return MessageResponseDto.fail(messageSource.getMessage("articuloNoExiste", null, locale));
 			}
 			if(salida.getIdOficina()!= 0 && !this.oficinaProvider.oficinaExisteByID(salida.getIdOficina())) {
-				return MessageResponseDto.fail("La oficina no existe");
+				return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 			}
 			MessageResponseDto<InventarioDto> inventario = inventarioProvider.getInventarioById(salida.getIdOficina(), salida.getCodArticulo());
 			if(!inventario.isSuccess()) {
-				return MessageResponseDto.fail("No se puede dar salida a artículos que no están inventariados");
+				return MessageResponseDto.fail(messageSource.getMessage("noSalidaNoInv", null, locale));
 			}
 			if(inventario.getMessage().getStock() + optionalSalida.get().getNumUnidades() < salida.getNumUnidades()) {
-				return MessageResponseDto.fail("No se puede dar salida a más artículos de los existentes");
+				return MessageResponseDto.fail(messageSource.getMessage("noSalidaMasStock", null, locale));
 			}
 			if(salida.getFechaSalida()!=null && salida.getFechaSalida().isAfter(LocalDate.now())) {
-				return MessageResponseDto.fail("La fecha no puede ser posterior a la actual");
+				return MessageResponseDto.fail(messageSource.getMessage("fechaPost", null, locale));
 			}
 			
 			OficinaDto of = oficinaProvider.getOficinaById(salida.getIdOficina()).getMessage();
@@ -165,10 +174,10 @@ public class SalidaProviderImpl implements SalidaProvider {
 			
 			saldiaRepository.save(salidaToUpdate);
 			
-			return MessageResponseDto.success("Salida editada con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("salidaEditada", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("La salida que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("salidaNoExiste", null, locale));
 		}
 	}
 	
@@ -194,19 +203,21 @@ public class SalidaProviderImpl implements SalidaProvider {
 
 	@Override
 	public MessageResponseDto<SalidaDto> getSalidaById(Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<SalidaEntity> optional = saldiaRepository.findById(id);
 		if(optional.isPresent()) {
 			SalidaDto salidaDto = this.convertToMapDto(optional.get());
 			return MessageResponseDto.success(salidaDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ninguna salida con ese id");
+			return MessageResponseDto.fail(messageSource.getMessage("salidaNoExiste", null, locale));
 		}
 	}
 
 	@Override
 	public MessageResponseDto<List<SalidaDto>> listSalidaByOficina(Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<SalidaEntity> listaEntity = this.saldiaRepository.findByIdOficina(idOficina);
 		List<SalidaDto> listaDto = listaEntity.stream()
@@ -217,8 +228,9 @@ public class SalidaProviderImpl implements SalidaProvider {
 
 	@Override
 	public MessageResponseDto<List<SalidaDto>> listSalidaByArticulo(Integer idArticulo) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.articuloProvider.articuloExisteByID(idArticulo)) {
-			return MessageResponseDto.fail("El artículo no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("articuloNoExiste", null, locale));
 		}
 		List<SalidaEntity> listaEntity = this.saldiaRepository.findByCodArticulo(idArticulo);
 		List<SalidaDto> listaDto = listaEntity.stream()

@@ -2,12 +2,15 @@ package com.tfg.inventariado.providerImpl;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.MessageResponseDto;
@@ -24,6 +27,9 @@ public class RolProviderImpl implements RolProvider {
 	
 	@Autowired
 	private ModelMapper modelMapper;
+	
+	@Autowired
+    private MessageSource messageSource;
 	
 	@Override
 	public RolDto convertToMapDto(RolEntity rol) {
@@ -45,22 +51,24 @@ public class RolProviderImpl implements RolProvider {
 
 	@Override
 	public MessageResponseDto<String> addRol(RolDto rol) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(rol.getCodigoRol()==null || rol.getCodigoRol().isEmpty()) {
-			return MessageResponseDto.fail("El código es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("codigoObl", null, locale));
 		}
 		if(rol.getNombre()==null || rol.getNombre().isEmpty()) {
-			return MessageResponseDto.fail("el nombre es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("nombreObl", null, locale));
 		}
 		if(rolExisteByCodigo(rol.getCodigoRol())) {
-			return MessageResponseDto.fail("El rol ya existe");
+			return MessageResponseDto.fail(messageSource.getMessage("rolExiste", null, locale));
 		}
 		RolEntity newRol = convertToMapEntity(rol);
 		newRol = rolRepository.save(newRol);
-		return MessageResponseDto.success("Rol añadido con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("rolAnadido", null, locale));
 	}
 
 	@Override
 	public MessageResponseDto<String> editRol(RolDto rol, String codigo) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<RolEntity> optionalRol = rolRepository.findById(codigo);
 		if(optionalRol.isPresent()) {
 			RolEntity rolToUpdate = optionalRol.get();
@@ -69,10 +77,10 @@ public class RolProviderImpl implements RolProvider {
 			
 			rolRepository.save(rolToUpdate);
 			
-			return MessageResponseDto.success("Rol editado con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("rolEditado", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("El rol que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("rolNoExiste", null, locale));
 		}
 	}
 	
@@ -84,12 +92,13 @@ public class RolProviderImpl implements RolProvider {
 
 	@Override
 	public MessageResponseDto<RolDto> getRolById(String codigo) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<RolEntity> optionalRol = rolRepository.findById(codigo);
 		if(optionalRol.isPresent()) {
 			RolDto rolDto = this.convertToMapDto(optionalRol.get());
 			return MessageResponseDto.success(rolDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ningún rol con ese código");
+			return MessageResponseDto.fail(messageSource.getMessage("rolNoExiste", null, locale));
 		}
 	}
 

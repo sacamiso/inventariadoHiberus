@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,6 +26,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -87,6 +90,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 	@Autowired
 	private LineaProvider lineaProvider;
 	
+	@Autowired
+    private MessageSource messageSource;
+	
 	@Override
 	public UnidadDto convertToMapDto(UnidadEntity unidad) {
 		return modelMapper.map(unidad, UnidadDto.class);
@@ -107,37 +113,39 @@ public class UnidadProviderImpl implements UnidadProvider {
 
 	@Override
 	public MessageResponseDto<Integer> addUnidad(UnidadDto unidad) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		if(unidad.getCodigoInterno()==null) {
-			return MessageResponseDto.fail("El código interno es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("ciObligatorio", null, locale));
 		}
 		if(unidadRepository.existsById(unidad.getCodigoInterno())){
-			return MessageResponseDto.fail("Ya existe una unidad con ese código interno");
+			return MessageResponseDto.fail(messageSource.getMessage("ciExiste", null, locale));
 		}
 		if(unidad.getCodEstado()==null || unidad.getCodEstado().isEmpty()) {
-			return MessageResponseDto.fail("El estado es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("estadoObl", null, locale));
 		}
 		if(!this.estadoProvider.estadoExisteByCodigo(unidad.getCodEstado())) {
-			return MessageResponseDto.fail("El estado no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("estadoNoExiste", null, locale));
 		}
 		if(unidad.getNumeroPedido()!= null && !this.pedidoProvider.pedidoExisteByID(unidad.getNumeroPedido())) {
-			return MessageResponseDto.fail("El pedido no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("pedidoNoExiste", null, locale));
 		}
 		if(unidad.getCodArticulo()!= null && !this.articuloProvider.articuloExisteByID(unidad.getCodArticulo())) {
-			return MessageResponseDto.fail("El articulo no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("articuloNoExiste", null, locale));
 		}
 		if(unidad.getIdOficina()!= null && !this.oficinaProvider.oficinaExisteByID(unidad.getIdOficina())) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		if(unidad.getIdSalida()!= null && !this.salidaProvider.salidaExisteByID(unidad.getIdSalida())) {
-			return MessageResponseDto.fail("La salida no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("salidaNoExiste", null, locale));
 		}else {
 			if(unidad.getIdSalida()!= null) {
 				MessageResponseDto<SalidaDto> salida = this.salidaProvider.getSalidaById(unidad.getIdSalida());
 				if(salida.getMessage().getCodArticulo() != unidad.getCodArticulo()) {
-					return MessageResponseDto.fail("La salida no es de ese tipo de artículo");
+					return MessageResponseDto.fail(messageSource.getMessage("salidaNoArt", null, locale));
 				}
 				if(salida.getMessage().getIdOficina() != unidad.getIdOficina()) {
-					return MessageResponseDto.fail("La salida no es de es de esa oficina");
+					return MessageResponseDto.fail(messageSource.getMessage("salidaNoOficina", null, locale));
 				}
 			}
 			
@@ -152,6 +160,7 @@ public class UnidadProviderImpl implements UnidadProvider {
 
 	@Override
 	public MessageResponseDto<String> editUnidad(UnidadDto unidad, Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		try {
 			Optional<UnidadEntity> optionalUnidad = unidadRepository.findById(id);
 			if(optionalUnidad.isPresent()) {
@@ -168,7 +177,7 @@ public class UnidadProviderImpl implements UnidadProvider {
 				return msg;
 				
 			}else {
-				return MessageResponseDto.fail("La unidad que se desea editar no existe");
+				return MessageResponseDto.fail(messageSource.getMessage("unidadNoExiste", null, locale));
 			}
 		} catch (Exception e) {
 			return MessageResponseDto.fail("Error: " + e.getMessage());
@@ -176,7 +185,8 @@ public class UnidadProviderImpl implements UnidadProvider {
 	}
 	
 	private MessageResponseDto<String> actualizarCampos(UnidadEntity unidad, UnidadDto unidadToUpdate) {
-		
+		Locale locale = LocaleContextHolder.getLocale();
+
 		if(unidadToUpdate.getCodEstado()!=null && !unidadToUpdate.getCodEstado().isEmpty() && this.estadoProvider.estadoExisteByCodigo(unidadToUpdate.getCodEstado())) {
 			if(unidadToUpdate.getCodEstado().equals("OP")&&unidad.getCodEstado().equals("MANT")) {
 				unidad.setCodEstado(unidadToUpdate.getCodEstado());
@@ -184,14 +194,14 @@ public class UnidadProviderImpl implements UnidadProvider {
 			else if(unidadToUpdate.getCodEstado().equals("MANT")&&unidad.getCodEstado().equals("OP")) {
 				List<AsignacionEntity> listaEntity = this.asignacionRepository.findByCodUnidadAndFechaFinIsNull(unidad.getCodigoInterno());
 				if(listaEntity.size()>0) {
-					return MessageResponseDto.fail("No se puede cambiar el estado a MANT ya que la unidad está asignada");
+					return MessageResponseDto.fail(messageSource.getMessage("noMant", null, locale));
 				}
 				unidad.setCodEstado(unidadToUpdate.getCodEstado());
 			}
 			else if(unidadToUpdate.getCodEstado().equals("S")&&unidad.getCodEstado().equals("OP") || unidadToUpdate.getCodEstado().equals("S")&&unidad.getCodEstado().equals("MANT")) {
 				List<AsignacionEntity> listaEntity = this.asignacionRepository.findByCodUnidadAndFechaFinIsNull(unidad.getCodigoInterno());
 				if(listaEntity.size()>0) {
-					return MessageResponseDto.fail("No se puede cambiar el estado a S ya que la unidad está asignada");
+					return MessageResponseDto.fail(messageSource.getMessage("noS", null, locale));
 				}
 				unidad.setCodEstado(unidadToUpdate.getCodEstado());
 			}
@@ -213,35 +223,37 @@ public class UnidadProviderImpl implements UnidadProvider {
 		if(unidadToUpdate.getIdSalida()!= null && this.salidaProvider.salidaExisteByID(unidadToUpdate.getIdSalida())) {
 			MessageResponseDto<SalidaDto> salida = this.salidaProvider.getSalidaById(unidadToUpdate.getIdSalida());
 			if( salida.isSuccess() && salida.getMessage().getIdOficina() != unidad.getIdOficina()) {
-				return MessageResponseDto.fail("La salida no es de la misma oficina que la unidad");
+				return MessageResponseDto.fail(messageSource.getMessage("salidaNoOfi", null, locale));
 			}
 			if( salida.isSuccess() && salida.getMessage().getCodArticulo() != unidad.getCodArticulo()) {
-				return MessageResponseDto.fail("La salida no es del mismo tipo de articulos que la unidad");
+				return MessageResponseDto.fail(messageSource.getMessage("salidaNoArt", null, locale));
 
 			}
 			if( salida.isSuccess() && salida.getMessage().getNumUnidades() <= unidadRepository.countBySalidaId(unidadToUpdate.getIdSalida())) {
-				return MessageResponseDto.fail("La salida no admite más unidades");
+				return MessageResponseDto.fail(messageSource.getMessage("salidaNoMasUni", null, locale));
 			}
 			unidad.setIdSalida(unidadToUpdate.getIdSalida());
 		}	
-		return MessageResponseDto.success("Unidad editada con éxito"); 	
+		return MessageResponseDto.success(messageSource.getMessage("unidadEditada", null, locale)); 	
 	}
 
 	@Override
 	public MessageResponseDto<UnidadDto> getUnidadById(Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<UnidadEntity> optional = unidadRepository.findById(id);
 		if(optional.isPresent()) {
 			UnidadDto unidadDto = this.convertToMapDto(optional.get());
 			return MessageResponseDto.success(unidadDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ninguna unidad con ese id");
+			return MessageResponseDto.fail(messageSource.getMessage("unidadNoExiste", null, locale));
 		}
 	}
 
 	@Override
 	public MessageResponseDto<List<UnidadDto>> listUnidadByEstado(String codEstado) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.estadoProvider.estadoExisteByCodigo(codEstado)) {
-			return MessageResponseDto.fail("El estado no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("estadoNoExiste", null, locale));
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByCodEstado(codEstado);
 		List<UnidadDto> listaDto = listaEntity.stream()
@@ -261,8 +273,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 
 	@Override
 	public MessageResponseDto<List<UnidadDto>> listUnidadDisponiblesByOficina(Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdSalidaIsNullAndCodEstadoNotAndIdOficina("MANT",idOficina);
 		List<UnidadDto> listaDto = listaEntity.stream()
@@ -282,8 +295,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 
 	@Override
 	public MessageResponseDto<List<UnidadDto>> listUnidadNODisponiblesByOficina(Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdSalidaIsNotNullAndIdOficina(idOficina);
 		List<UnidadDto> listaDto = listaEntity.stream()
@@ -294,8 +308,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 
 	@Override
 	public MessageResponseDto<List<UnidadDto>> listUnidadesByOficina(Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByIdOficina(idOficina);
 		List<UnidadDto> listaDto = listaEntity.stream()
@@ -306,8 +321,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 
 	@Override
 	public MessageResponseDto<List<UnidadDto>> listUnidadByArticulo(Integer idArticulo) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.articuloProvider.articuloExisteByID(idArticulo)) {
-			return MessageResponseDto.fail("El artículo no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("articuloNoExiste", null, locale));
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findByCodArticulo(idArticulo);
 		List<UnidadDto> listaDto = listaEntity.stream()
@@ -324,10 +340,12 @@ public class UnidadProviderImpl implements UnidadProvider {
 
 	@Override
 	public MessageResponseDto<String> darSalidaUnidad(Integer idSalida, Integer idUnidad) {
+		Locale locale = LocaleContextHolder.getLocale();
+
 		Optional<UnidadEntity> optionalUnidad = unidadRepository.findById(idUnidad);
 		MessageResponseDto<SalidaDto> salida = salidaProvider.getSalidaById(idSalida);
 		if(!salida.isSuccess()) {
-			return MessageResponseDto.fail("La salida no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("salidaNoExiste", null, locale));
 		}
 		
 		if(optionalUnidad.isPresent()) {
@@ -337,16 +355,16 @@ public class UnidadProviderImpl implements UnidadProvider {
 				return MessageResponseDto.fail("la salida elegida no vale para esta unidad");
 			}
 			if(asignacionRepository.existsByCodUnidadAndFechaFinIsNull(idUnidad)) {
-				return MessageResponseDto.fail("La unidad se encuentra en una asignación");
+				return MessageResponseDto.fail(messageSource.getMessage("salidaInvForUnidad", null, locale));
 			}
 
 			unidad.setIdSalida(idSalida);
 			unidadRepository.save(unidad);
 			
-			return MessageResponseDto.success("Unidad editada con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("unidadEditada", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("La unidad que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("unidadNoExiste", null, locale));
 		}
 	}
 
@@ -467,8 +485,9 @@ public class UnidadProviderImpl implements UnidadProvider {
 
 	@Override
 	public MessageResponseDto<List<UnidadDto>> listUnidadDisponiblesSinAsignarByOficina(Integer idOficina) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.oficinaProvider.oficinaExisteByID(idOficina)) {
-			return MessageResponseDto.fail("La oficina no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 		List<UnidadEntity> listaEntity = this.unidadRepository.findUnidadesLibresByEstadoAndOficina("OP",idOficina);
 		List<UnidadDto> listaDto = listaEntity.stream()

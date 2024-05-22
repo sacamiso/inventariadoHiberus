@@ -2,12 +2,15 @@ package com.tfg.inventariado.providerImpl;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.tfg.inventariado.dto.MedioPagoDto;
@@ -24,6 +27,9 @@ public class MedioPagoProviderImpl implements MedioPagoProvider {
 	
 	@Autowired
 	private ModelMapper modelMapper;
+	
+	@Autowired
+    private MessageSource messageSource;
 	
 	@Override
 	public MedioPagoDto convertToMapDto(MedioPagoEntity medio) {
@@ -45,22 +51,24 @@ public class MedioPagoProviderImpl implements MedioPagoProvider {
 
 	@Override
 	public MessageResponseDto<String> addMedioPago(MedioPagoDto medio) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(medio.getCodigoMedio()==null || medio.getCodigoMedio().isEmpty()) {
-			return MessageResponseDto.fail("El código es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("codigoObl", null, locale));
 		}
 		if(medio.getDescripcion()==null || medio.getDescripcion().isEmpty()) {
-			return MessageResponseDto.fail("La descripción es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("descripcionObligatoria", null, locale));
 		}
 		if(medioExisteByCodigo(medio.getCodigoMedio())) {
-			return MessageResponseDto.fail("El medio ya existe");
+			return MessageResponseDto.fail(messageSource.getMessage("medioExiste", null, locale));
 		}
 		MedioPagoEntity newMedio = convertToMapEntity(medio);
 		newMedio = medioPagoRepository.save(newMedio);
-		return MessageResponseDto.success("Medio de pago añadido con éxito");
+		return MessageResponseDto.success(messageSource.getMessage("medioAnadido", null, locale));
 	}
 
 	@Override
 	public MessageResponseDto<String> editMedioPago(MedioPagoDto medio, String codigo) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<MedioPagoEntity> optionalMedio = medioPagoRepository.findById(codigo);
 		if(optionalMedio.isPresent()) {
 			MedioPagoEntity medioToUpdate = optionalMedio.get();
@@ -69,10 +77,10 @@ public class MedioPagoProviderImpl implements MedioPagoProvider {
 			
 			medioPagoRepository.save(medioToUpdate);
 			
-			return MessageResponseDto.success("Medio de pago editado con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("medioEditado", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("El medio de pago que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("medioNoExiste", null, locale));
 		}
 	}
 	
@@ -84,12 +92,13 @@ public class MedioPagoProviderImpl implements MedioPagoProvider {
 
 	@Override
 	public MessageResponseDto<MedioPagoDto> getMedioPagoById(String codigo) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<MedioPagoEntity> optionalMedio = medioPagoRepository.findById(codigo);
 		if(optionalMedio.isPresent()) {
 			MedioPagoDto medioDto = this.convertToMapDto(optionalMedio.get());
 			return MessageResponseDto.success(medioDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ningún medio de pago con ese código");
+			return MessageResponseDto.fail(messageSource.getMessage("medioNoExiste", null, locale));
 		}
 	}
 

@@ -2,11 +2,14 @@ package com.tfg.inventariado.providerImpl;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -38,6 +41,9 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 	@Autowired
 	private UnidadProvider unidadProvider;
 	
+	@Autowired
+    private MessageSource messageSource;
+	
 	@Override
 	public AsignacionDto convertToMapDto(AsignacionEntity asignacion) {
 		return modelMapper.map(asignacion, AsignacionDto.class);
@@ -56,41 +62,43 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 
 	@Override
 	public MessageResponseDto<Integer> addAsignacion(AsignacionDto asignacion) {
+		Locale locale = LocaleContextHolder.getLocale();
+
 		if(asignacion.getIdAsignacion()!=null && asignacionRepository.findById(asignacion.getIdAsignacion()).isPresent()) {
-			return MessageResponseDto.fail("La asignación ya existe");
+			return MessageResponseDto.fail(messageSource.getMessage("asignacionExiste", null, locale));
 		}
 		if(asignacion.getFechaInicio()==null) {
-			return MessageResponseDto.fail("La fecha de inicio es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("fechaInObligatoria", null, locale));
 		}
 		if(asignacion.getFechaInicio().isAfter(LocalDate.now())) {
-			return MessageResponseDto.fail("La fecha de inicio no puede ser posterior a la fecha actual");
+			return MessageResponseDto.fail(messageSource.getMessage("fechaInPost", null, locale));
 		}
 		if(asignacion.getFechaFin()!=null && asignacion.getFechaFin().isBefore(asignacion.getFechaInicio())) {
-			return MessageResponseDto.fail("La fecha de fin no puede ser anterior a la fecha de inicio");
+			return MessageResponseDto.fail(messageSource.getMessage("fechafinAnt", null, locale));
 		}
 		if(asignacion.getFechaFin()!=null && asignacion.getFechaFin().isAfter(LocalDate.now())) {
-			return MessageResponseDto.fail("La fecha de fin no puede ser posterior a la fecha actual");
+			return MessageResponseDto.fail(messageSource.getMessage("fechaFinPost", null, locale));
 		}
 		if(asignacion.getIdEmpleado()==null) {
-			return MessageResponseDto.fail("El empleado es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("empleadoObligatorio", null, locale));
 		}
 		if(!empleadoProvider.empleadoExisteByCodigo(asignacion.getIdEmpleado())) {
-			return MessageResponseDto.fail("El empleado no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("empleadoNoExiste", null, locale));
 		}
 		if(asignacion.getCodUnidad()==null) {
-			return MessageResponseDto.fail("La unidad es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("unidadObligatoria", null, locale));
 		}
 		if(!unidadProvider.unidadExisteByID(asignacion.getCodUnidad())) {
-			return MessageResponseDto.fail("La unidad no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("unidadNoExiste", null, locale));
 		}
 		if(asignacionRepository.existsByCodUnidadAndFechaFinIsNull(asignacion.getCodUnidad())) {
-			return MessageResponseDto.fail("La unidad se encuentra en una asignación sin finalizar");
+			return MessageResponseDto.fail(messageSource.getMessage("unidadAsigSinFin", null, locale));
 		}
 		if(empleadoProvider.getEmpleadoById(asignacion.getIdEmpleado()).getMessage().getIdOficina() != unidadProvider.getUnidadById(asignacion.getCodUnidad()).getMessage().getIdOficina()) {
-			return MessageResponseDto.fail("El empleado y la unidad no se encuentran en la misma oficina");
+			return MessageResponseDto.fail(messageSource.getMessage("empleadoOficinaDiferente", null, locale));
 		}
 		if(unidadProvider.getUnidadById(asignacion.getCodUnidad()).getMessage().getIdSalida()!=null) {
-			return MessageResponseDto.fail("La unidad no está disponible");
+			return MessageResponseDto.fail(messageSource.getMessage("unidadNoDisponible", null, locale));
 		}
 		AsignacionEntity newAsignacion = convertToMapEntity(asignacion);
 		newAsignacion = asignacionRepository.save(newAsignacion);
@@ -99,6 +107,8 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 
 	@Override
 	public MessageResponseDto<String> editAsignacion(AsignacionDto asignacion, Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
+
 		Optional<AsignacionEntity> optionalAsignacion= asignacionRepository.findById(id);
 
 		if(optionalAsignacion.isPresent()) {
@@ -109,10 +119,10 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 			
 			asignacionRepository.save(asignacionToUpdate);
 			
-			return MessageResponseDto.success("Asignación editada con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("asignacionEditExito", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("La asignación que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("asignacionNoExiste", null, locale));
 		}
 	}
 	
@@ -132,12 +142,14 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 
 	@Override
 	public MessageResponseDto<AsignacionDto> getAsignacionById(Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
+
 		Optional<AsignacionEntity> optional= asignacionRepository.findById(id);
 		if(optional.isPresent()) {
 			AsignacionDto asignacionDto = this.convertToMapDto(optional.get());
 			return MessageResponseDto.success(asignacionDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ninguna asignación con ese id");
+			return MessageResponseDto.fail(messageSource.getMessage("asignacionNoExiste", null, locale));
 		}
 	}
 
@@ -145,16 +157,18 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 	public MessageResponseDto<String> finalizarAsignación(Integer id) {
 		Optional<AsignacionEntity> optionalAsignacion= asignacionRepository.findById(id);
 
+		Locale locale = LocaleContextHolder.getLocale();
+
 		if(optionalAsignacion.isPresent()) {
 			AsignacionEntity asignacionToUpdate = optionalAsignacion.get();
 			if(asignacionToUpdate.getFechaFin()!=null) {
-				return MessageResponseDto.fail("La asignación ya está finalizada");
+				return MessageResponseDto.fail(messageSource.getMessage("asignacionFinalizada", null, locale));
 			}
 			asignacionToUpdate.setFechaFin(LocalDate.now());
 			asignacionRepository.save(asignacionToUpdate);
-			return MessageResponseDto.success("Asignación finalizada con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("asignacionFinExito", null, locale));
 		}else {
-			return MessageResponseDto.fail("La asignación que se desea finalizar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("asignacionNoExiste", null, locale));
 		}
 	}
 
@@ -170,8 +184,9 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 
 	@Override
 	public MessageResponseDto<List<AsignacionDto>> listAsignacionByEmpleadoSinFinalizar(Integer idEmpleado) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.empleadoProvider.empleadoExisteByCodigo(idEmpleado)) {
-			return MessageResponseDto.fail("El empleado no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("empleadoNoExiste", null, locale));
 		}
 		List<AsignacionEntity> listaEntity = this.asignacionRepository.findByFechaFinIsNullAndIdEmpleado(idEmpleado);
 		List<AsignacionDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
@@ -180,8 +195,9 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 
 	@Override
 	public MessageResponseDto<List<AsignacionDto>> listAsignacionByEmpleadoFinalizadas(Integer idEmpleado) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.empleadoProvider.empleadoExisteByCodigo(idEmpleado)) {
-			return MessageResponseDto.fail("El empleado no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("empleadoNoExiste", null, locale));
 		}
 		List<AsignacionEntity> listaEntity = this.asignacionRepository.findByFechaFinIsNotNullAndIdEmpleado(idEmpleado);
 		List<AsignacionDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
@@ -190,8 +206,9 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 
 	@Override
 	public MessageResponseDto<List<AsignacionDto>> listAsignacionByUnidad(Integer codUnidad) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.unidadProvider.unidadExisteByID(codUnidad)) {
-			return MessageResponseDto.fail("La unidad no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("unidadNoExiste", null, locale));
 		}
 		List<AsignacionEntity> listaEntity = this.asignacionRepository.findByCodUnidad(codUnidad);
 		List<AsignacionDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());
@@ -200,8 +217,9 @@ public class AsignacionProviderImpl implements AsignacionProvider {
 
 	@Override
 	public MessageResponseDto<List<AsignacionDto>> listAsignacionByUnidadSinFinalizar(Integer codUnidad) {
+		Locale locale = LocaleContextHolder.getLocale();
 		if(!this.unidadProvider.unidadExisteByID(codUnidad)) {
-			return MessageResponseDto.fail("La unidad no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("unidadNoExiste", null, locale));
 		}
 		List<AsignacionEntity> listaEntity = this.asignacionRepository.findByCodUnidadAndFechaFinIsNull(codUnidad);
 		List<AsignacionDto> listaDto = listaEntity.stream().map(this::convertToMapDto).collect(Collectors.toList());

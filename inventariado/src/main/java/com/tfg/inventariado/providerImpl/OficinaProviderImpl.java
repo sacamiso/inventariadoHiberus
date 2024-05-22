@@ -2,12 +2,15 @@ package com.tfg.inventariado.providerImpl;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -31,6 +34,9 @@ public class OficinaProviderImpl implements OficinaProvider {
 	@Autowired
 	private ModelMapper modelMapper;
 	
+	@Autowired
+    private MessageSource messageSource;
+	
 	@Override
 	public OficinaDto convertToMapDto(OficinaEntity oficina) {
 		return modelMapper.map(oficina, OficinaDto.class);
@@ -52,14 +58,16 @@ public class OficinaProviderImpl implements OficinaProvider {
 
 	@Override
 	public MessageResponseDto<Integer> addOficina(OficinaDto oficina) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		if(oficina.getDireccion()==null || oficina.getDireccion().isEmpty()) {
-			return MessageResponseDto.fail("La direccion es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("direccionObl", null, locale));
 		}
 		if(oficina.getLocalidad()==null || oficina.getLocalidad().isEmpty()) {
-			return MessageResponseDto.fail("La localidad es obligatoria");
+			return MessageResponseDto.fail(messageSource.getMessage("localidadObl", null, locale));
 		}
 		if(oficina.getPais()==null || oficina.getPais().isEmpty()) {
-			return MessageResponseDto.fail("El país es obligatorio");
+			return MessageResponseDto.fail(messageSource.getMessage("paisObl", null, locale));
 		}
 		OficinaEntity newOficina = convertToMapEntity(oficina);
 		newOficina = oficinaRepository.save(newOficina);
@@ -68,6 +76,7 @@ public class OficinaProviderImpl implements OficinaProvider {
 
 	@Override
 	public MessageResponseDto<String> editOficina(OficinaDto oficina, Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
 		Optional<OficinaEntity> optionalOficina = oficinaRepository.findById(id);
 		if(optionalOficina.isPresent()) {
 			OficinaEntity oficinaToUpdate = optionalOficina.get();
@@ -76,10 +85,10 @@ public class OficinaProviderImpl implements OficinaProvider {
 			
 			oficinaRepository.save(oficinaToUpdate);
 			
-			return MessageResponseDto.success("Oficina editada con éxito");
+			return MessageResponseDto.success(messageSource.getMessage("oficinaEditada", null, locale));
 			
 		}else {
-			return MessageResponseDto.fail("La oficina que se desea editar no existe");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 	}
 	
@@ -107,12 +116,14 @@ public class OficinaProviderImpl implements OficinaProvider {
 
 	@Override
 	public MessageResponseDto<OficinaDto> getOficinaById(Integer id) {
+		Locale locale = LocaleContextHolder.getLocale();
+		
 		Optional<OficinaEntity> optionalOficina = oficinaRepository.findById(id);
 		if(optionalOficina.isPresent()) {
 			OficinaDto oficinaDto = this.convertToMapDto(optionalOficina.get());
 			return MessageResponseDto.success(oficinaDto);
 		}else {
-			return MessageResponseDto.fail("No se encuentra ninguna oficina con ese id");
+			return MessageResponseDto.fail(messageSource.getMessage("oficinaNoExiste", null, locale));
 		}
 	}
 
