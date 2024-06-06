@@ -462,12 +462,14 @@ public class UnidadProviderImpl implements UnidadProvider {
         	lineasDto.addAll( this.lineaProvider.listLineasByPedido(pedido.getNumeroPedido()).getMessage());
         }
         
+        lineasDto.removeIf(linea -> !linea.getCodigoArticulo().equals(codArticulo));
+        
         Map<Integer, Integer> mapaSumaUnidadesPorPedido = lineasDto.stream().collect(Collectors.groupingBy(LineaDto::getNumeroPedido,Collectors.summingInt(LineaDto::getNumeroUnidades)));
       
         List<PedidoDto> pedidosMostrar = new ArrayList<PedidoDto>();
         
         for(Integer codPed : mapaSumaUnidadesPorPedido.keySet()) {
-        	Long valor = unidadesPorPedido.get(codPed);
+        	Integer valor = mapaSumaUnidadesPorPedido.get(codPed);
         	
         	if (unidadesPorPedido.containsKey(codPed)) {
                 Long cantidadUnidades = unidadesPorPedido.get(codPed);
